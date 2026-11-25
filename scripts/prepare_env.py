@@ -1,4 +1,4 @@
-"""Environment bootstrapper (matching srt-whiteboard-animation style): prints ENV_PY=<path>."""
+"""Environment bootstrapper for ecom-tvc-studio: checks/installs dependencies and prints ENV_PY=<path>."""
 
 import argparse
 import os

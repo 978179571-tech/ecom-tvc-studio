@@ -1,6 +1,6 @@
 # ecom-tvc-studio Skill
 
-> **搭配 AI Agent + 浏览器可视化预览台的电商主图/短视频制作 Skill** —— 风格与协同方式对标 `srt-whiteboard-animation`（逐步确认、预览先行、人机协同），专为保健品（蓝帽）、功能食品、大健康品类打造 **16:9 横屏 + 9:16 竖屏双画幅** 一键复用工作流。
+> **搭配 AI Agent + 浏览器可视化预览台的电商主图/短视频制作 Skill** —— 采用「逐步确认、预览先行、人机协同」工作流，专为保健品（蓝帽）、功能食品、大健康品类打造 **16:9 横屏 + 9:16 竖屏双画幅** 一键复用生产线。
 
 无需 Node.js，纯 Python + 浏览器即开即用，内置 **三金® GOP®氨糖软骨素葛根胶囊** 完整可运行 Demo。
 
@@ -18,7 +18,7 @@
 
 ---
 
-## 工作方式（对标 `srt-whiteboard-animation` 人机协同闭环）
+## 工作方式（AI Agent + 浏览器工作台人机协同闭环）
 
 1. **环境检查**：`python scripts/prepare_env.py --check`（自动输出 `ENV_PY=<路径>`）；
 2. **AI Agent 建项与合规锁死**：把新品包装图与资料交给 AI Agent（如 Antigravity / Codex / Claude Code），Agent 调用 `cli.py init` 写入 `project.json` 并跑 `cli.py check` 拦截违禁医疗词；
