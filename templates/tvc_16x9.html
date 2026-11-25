@@ -567,16 +567,35 @@ function sweepSheen(el, t, start, dur = 0.85) {
   el.style.left = `${lerp(-160, 960, easeOutCubic(p)).toFixed(1)}px`;
 }
 
+const FRAME_FALLBACKS = {
+  frames_02: 'assets/cutouts/01_stairs_man.png',
+  frames_01: 'assets/cutouts/02_back_woman.png',
+  frames_03: 'assets/cutouts/03_knee_sit_man.png',
+};
+const _missingFrameFolders = {};
+
 function frameSrc(folder, idx) {
+  if (_missingFrameFolders[folder]) return FRAME_FALLBACKS[folder] || '';
   const n = Math.max(1, Math.min(94, Math.round(idx)));
   return `assets/v5/${folder}/f_${String(n).padStart(4, '0')}.jpg`;
 }
 
 async function setFrame(imgEl, src) {
-  if (imgEl.dataset.cur === src) return;
+  if (!src || imgEl.dataset.cur === src) return;
   imgEl.dataset.cur = src;
   imgEl.src = src;
-  try { if (imgEl.decode) await imgEl.decode(); } catch (e) {}
+  try {
+    if (imgEl.decode) await imgEl.decode();
+  } catch (e) {
+    const m = src.match(/assets\/v5\/(frames_\d+)\//);
+    if (m && FRAME_FALLBACKS[m[1]]) {
+      _missingFrameFolders[m[1]] = true;
+      const fb = FRAME_FALLBACKS[m[1]];
+      imgEl.dataset.cur = fb;
+      imgEl.src = fb;
+      try { if (imgEl.decode) await imgEl.decode(); } catch (_) {}
+    }
+  }
 }
 
 window.renderAt = async function(t) {
