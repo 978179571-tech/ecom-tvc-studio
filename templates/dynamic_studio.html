@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>ecom-tvc-studio Dynamic Scene Engine</title>
+<script>
+(function() {
+  const qs = new URLSearchParams(location.search);
+  const pid = qs.get('project') || 'sanjin-antang';
+  const base = document.createElement('base');
+  base.href = '/projects/' + encodeURIComponent(pid) + '/';
+  document.head.appendChild(base);
+})();
+</script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #071311; font-family: "Microsoft YaHei", "PingFang SC", sans-serif; color: #FFFFFF; }
+  #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: radial-gradient(circle at 50% 28%, #103A32 0%, #071815 65%, #040D0C 100%); }
+  #stage.landscape { width: 1920px; height: 1080px; }
+
+  .serif { font-family: "Source Han Serif SC", "Songti SC", "STSong", "Microsoft YaHei", serif; font-weight: 800; }
+  .pill-gold {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 12px 28px; border-radius: 999px;
+    background: linear-gradient(135deg, #F6D782 0%, #CFA243 100%);
+    color: #102A24; font-weight: 800; letter-spacing: 0.04em;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.38);
+  }
+  .pill-glass {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 10px 24px; border-radius: 999px;
+    background: rgba(10, 32, 28, 0.72); border: 1.5px solid rgba(246,215,130,0.45);
+    color: #FFE066; font-weight: 700; backdrop-filter: blur(8px);
+  }
+  .glass-card {
+    background: linear-gradient(155deg, rgba(16, 56, 48, 0.86) 0%, rgba(8, 28, 24, 0.92) 100%);
+    border: 1.5px solid rgba(246, 215, 130, 0.34);
+    border-radius: 26px; padding: 28px 32px;
+    box-shadow: 0 18px 46px rgba(0, 0, 0, 0.42);
+  }
+
+  #prog-track { position: absolute; left: 0; top: 0; width: 100%; height: 6px; background: rgba(255,255,255,0.12); z-index: 90; }
+  #prog-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #5CE1C6, #FFE066); }
+  #topbar {
+    position: absolute; left: 48px; right: 48px; top: 36px; z-index: 80;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  #tb-brand { font-size: 28px; font-weight: 800; color: #F7F1E3; letter-spacing: 0.04em; text-shadow: 0 2px 12px rgba(0,0,0,0.6); }
+  #tb-chap {
+    padding: 8px 20px; border-radius: 999px; font-size: 22px; font-weight: 700;
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22); color: #FFE066;
+  }
+  #scene-root { position: absolute; inset: 0; z-index: 20; }
+  .scene-layer { position: absolute; inset: 0; overflow: hidden; }
+  .bg-cover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .vignette { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5,16,14,0.72) 0%, rgba(5,16,14,0.22) 45%, rgba(5,16,14,0.88) 100%); }
+  .sheen {
+    position: absolute; top: 0; left: -180px; width: 140px; height: 100%;
+    background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.38) 50%, transparent 100%);
+    pointer-events: none;
+  }
+  #motes { position: absolute; inset: 0; pointer-events: none; z-index: 30; opacity: 0.45; }
+  .compliance-bar {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 85;
+    padding: 16px 36px; text-align: center;
+    background: rgba(7, 22, 19, 0.84); border-top: 1px solid rgba(246,215,130,0.25);
+    color: rgba(255,248,230,0.88); font-size: 22px; letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="prog-track"><div id="prog-bar"></div></div>
+  <div id="topbar">
+    <div id="tb-brand">品牌产品</div>
+    <div id="tb-chap">SCENE 01</div>
+  </div>
+  <div id="motes"></div>
+  <div id="scene-root"></div>
+</div>
+
+<script>
+const qs = new URLSearchParams(location.search);
+const RATIO = qs.get('ratio') === '16x9' ? '16x9' : '9x16';
+const stage = document.getElementById('stage');
+if (RATIO === '16x9') stage.classList.add('landscape');
+
+const W = RATIO === '16x9' ? 1920 : 1080;
+const H = RATIO === '16x9' ? 1080 : 1920;
+
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const prog = (t, a, b) => clamp((t - a) / Math.max(0.0001, b - a), 0, 1);
+const lerp = (a, b, x) => a + (b - a) * x;
+const easeOutCubic = x => 1 - Math.pow(1 - x, 3);
+const easeExpoOut = x => x >= 1 ? 1 : (x <= 0 ? 0 : 1 - Math.pow(2, -9 * x));
+
+// Subtle ambient golden motes
+const motesLayer = document.getElementById('motes');
+const motes = [];
+for (let i = 0; i < 24; i++) {
+  const el = document.createElement('div');
+  const sz = 4 + (i % 5) * 2.5;
+  el.style.cssText = `position:absolute;width:${sz}px;height:${sz}px;border-radius:50%;background:${i % 3 === 0 ? '#FFE28A' : 'rgba(255,248,224,0.8)'};box-shadow:0 0 ${sz * 2}px rgba(255,226,138,0.6);`;
+  motesLayer.appendChild(el);
+  motes.push({ el, x0: (i * 173) % W, y0: (i * 227) % H, vy: 22 + (i % 5) * 9, ph: (i * 0.43) % 6.28 });
+}
+
+window.__STUDIO_CFG = null;
+let lastRenderedSceneId = null;
+
+function esc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function buildSceneDOM(sc, cfg, idx) {
+  const isLand = RATIO === '16x9';
+  const brand = cfg.brand || {};
+  const stype = sc.type || 'custom_card';
+  const title = esc(sc.title || `第 ${idx + 1} 幕`);
+  const sub = esc(sc.subtitle || '');
+  const badge = esc(sc.badge || `SCENE ${String(idx + 1).padStart(2, '0')}`);
+  const hi = esc(sc.highlight || '');
+  const media = sc.media || '';
+  const items = Array.isArray(sc.items) ? sc.items : [];
+
+  if (stype === 'hero_hook') {
+    const bgImg = media ? `<img id="dyn-bg" class="bg-cover" src="${esc(media)}" onerror="this.style.display='none'" />` : '';
+    const padX = isLand ? 110 : 72;
+    const titleSize = isLand ? 84 : 82;
+    const subSize = isLand ? 38 : 40;
+    return `
+      <div class="scene-layer" style="background:radial-gradient(circle at 50% 40%, #1C4A40 0%, #091B18 100%);">
+        ${bgImg}
+        <div class="vignette"></div>
+        <svg id="dyn-reticle" viewBox="0 0 240 240" style="position:absolute; left:${isLand ? '64%' : '50%'}; top:${isLand ? '54%' : '52%'}; width:260px; height:260px; transform:translate(-50%,-50%); pointer-events:none;">
+          <circle id="dyn-r1" cx="120" cy="120" r="46" fill="rgba(255,82,82,0.16)" stroke="#FF5E5E" stroke-width="4" />
+          <circle id="dyn-r2" cx="120" cy="120" r="82" fill="none" stroke="rgba(255,110,110,0.55)" stroke-width="2.5" stroke-dasharray="10 8" />
+          <circle cx="120" cy="120" r="10" fill="#FFE066" />
+        </svg>
+        <div style="position:absolute; left:${padX}px; right:${isLand ? '46%' : padX + 'px'}; top:${isLand ? '24%' : '15%'};">
+          <div id="dyn-badge" class="pill-glass" style="font-size:${isLand ? 24 : 26}px; margin-bottom:24px;">● ${badge}</div>
+          <div id="dyn-title" class="serif" style="font-size:${titleSize}px; line-height:1.18; color:#FFFFFF; text-shadow:0 6px 26px rgba(0,0,0,0.65);">${title}</div>
+          <div id="dyn-rule" style="height:6px; width:260px; margin:26px 0; border-radius:4px; background:linear-gradient(90deg,#FFE066,#5CE1C6);"></div>
+          <div id="dyn-sub" style="font-size:${subSize}px; line-height:1.45; color:#F5ECD6; font-weight:600;">${sub}</div>
+        </div>
+        ${hi ? `<div id="dyn-hi" style="position:absolute; left:50%; bottom:${isLand ? '10%' : '13%'}; transform:translateX(-50%);" class="pill-gold"><span style="font-size:${isLand ? 30 : 34}px;">${hi}</span></div>` : ''}
+      </div>`;
+  }
+
+  if (stype === 'data_hud') {
+    const m1 = items[0] || { label: '核心指标 A', value: 85, end_value: 48 };
+    const m2 = items[1] || { label: '核心指标 B', value: 82, end_value: 42 };
+    const visual = media
+      ? `<img src="${esc(media)}" style="max-width:100%; max-height:100%; object-fit:contain; filter:drop-shadow(0 0 28px rgba(92,225,198,0.35));" onerror="this.style.display='none'" />`
+      : `<div style="width:260px;height:260px;border-radius:50%;border:3px dashed rgba(92,225,198,0.5);display:flex;align-items:center;justify-content:center;color:#5CE1C6;font-size:28px;">科学机理视觉区</div>`;
+    return `
+      <div class="scene-layer" style="background:radial-gradient(circle at 50% 35%, #0D2D3A 0%, #06131A 75%);">
+        <div id="dyn-beam" style="position:absolute; left:0; right:0; top:38%; height:4px; background:linear-gradient(90deg,transparent,#5CE1C6,#FFE066,#5CE1C6,transparent); box-shadow:0 0 28px #5CE1C6;"></div>
+        <div style="position:absolute; inset:${isLand ? '120px 90px 80px' : '150px 64px 110px'}; display:flex; flex-direction:${isLand ? 'row' : 'column'}; gap:${isLand ? 60 : 42}px; align-items:center; justify-content:center;">
+          <div style="flex:1; display:flex; align-items:center; justify-content:center; position:relative; max-height:${isLand ? '720px' : '640px'};">
+            ${visual}
+          </div>
+          <div style="flex:1; width:100%;">
+            <div id="dyn-badge" class="pill-glass" style="font-size:24px; margin-bottom:20px;">${badge}</div>
+            <div id="dyn-title" class="serif" style="font-size:${isLand ? 66 : 64}px; line-height:1.2; margin-bottom:18px;">${title}</div>
+            <div id="dyn-sub" style="font-size:${isLand ? 32 : 34}px; color:#B7DDD5; margin-bottom:34px; line-height:1.45;">${sub}</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+              <div id="dyn-c1" class="glass-card" style="text-align:center;">
+                <div style="font-size:26px; color:#9FE7D8; margin-bottom:10px;">${esc(m1.label || m1.title || '指标 1')}</div>
+                <div id="dyn-v1" class="serif" style="font-size:74px; color:#FFE066;" data-from="${m1.value ?? 85}" data-to="${m1.end_value ?? 48}">${m1.value ?? 85}%</div>
+              </div>
+              <div id="dyn-c2" class="glass-card" style="text-align:center;">
+                <div style="font-size:26px; color:#9FE7D8; margin-bottom:10px;">${esc(m2.label || m2.title || '指标 2')}</div>
+                <div id="dyn-v2" class="serif" style="font-size:74px; color:#FF9B85;" data-from="${m2.value ?? 82}" data-to="${m2.end_value ?? 42}">${m2.value ?? 82}%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  if (stype === 'split_contrast') {
+    const it1 = items[0] || { title: '传统方案局限', desc: sub || '只解决表面问题，核心吸收差' };
+    const it2 = items[1] || { title: '关键协同缺失', desc: hi || '缺少黄金复配与科学配比' };
+    return `
+      <div class="scene-layer" style="background:linear-gradient(135deg, #0E2A26 0%, #192229 50%, #241918 100%);">
+        <div style="position:absolute; inset:${isLand ? '110px 90px 80px' : '150px 64px 110px'}; display:flex; flex-direction:column; justify-content:space-between; align-items:center;">
+          <div style="text-align:center;">
+            <div id="dyn-badge" class="pill-glass" style="font-size:24px; margin-bottom:18px;">${badge}</div>
+            <div id="dyn-title" class="serif" style="font-size:${isLand ? 70 : 68}px; color:#FFE066;">${title}</div>
+          </div>
+          <div style="display:grid; grid-template-columns:${isLand ? '1fr 340px 1fr' : '1fr'}; gap:28px; width:100%; align-items:center;">
+            <div id="dyn-c1" class="glass-card" style="border-color:rgba(255,140,122,0.5);">
+              <div style="font-size:36px; font-weight:800; color:#FF9B85; margin-bottom:12px;">✕ ${esc(it1.title || it1)}</div>
+              <div style="font-size:28px; color:#E8EFEA; line-height:1.5;">${esc(it1.desc || '')}</div>
+            </div>
+            <div style="display:flex; justify-content:center; align-items:center;">
+              ${media ? `<img id="dyn-float" src="${esc(media)}" style="max-height:${isLand ? 380 : 320}px; max-width:100%; object-fit:contain; filter:drop-shadow(0 18px 34px rgba(0,0,0,0.5));" onerror="this.style.display='none'" />` : `<div id="dyn-float" class="serif" style="font-size:96px; color:rgba(255,224,102,0.28);">VS</div>`}
+            </div>
+            <div id="dyn-c2" class="glass-card" style="border-color:rgba(92,225,198,0.55);">
+              <div style="font-size:36px; font-weight:800; color:#5CE1C6; margin-bottom:12px;">✓ ${esc(it2.title || it2)}</div>
+              <div style="font-size:28px; color:#E8EFEA; line-height:1.5;">${esc(it2.desc || '')}</div>
+            </div>
+          </div>
+          <div id="dyn-sub" style="font-size:32px; color:#F5E8C7; text-align:center;">${sub}</div>
+        </div>
+      </div>`;
+  }
+
+  if (stype === 'orbit_cards') {
+    const cards = items.length ? items.slice(0, 4) : [
+      { title: '核心成分 1', desc: '高活性科学配比' },
+      { title: '核心成分 2', desc: '协同增效更易吸收' },
+    ];
+    return `
+      <div class="scene-layer" style="background:radial-gradient(circle at 50% 42%, #13473D 0%, #071E1A 70%, #04100E 100%);">
+        <div style="position:absolute; left:60px; right:60px; top:${isLand ? 105 : 140}px; text-align:center;">
+          <div id="dyn-badge" class="pill-glass" style="font-size:24px; margin-bottom:16px;">${badge}</div>
+          <div id="dyn-title" class="serif" style="font-size:${isLand ? 64 : 62}px; color:#FFFFFF;">${title}</div>
+          <div id="dyn-sub" style="font-size:30px; color:#FFE066; margin-top:10px;">${sub}</div>
+        </div>
+        <div style="position:absolute; left:50%; top:${isLand ? '54%' : '45%'}; transform:translate(-50%,-50%); width:${isLand ? 380 : 420}px; height:${isLand ? 380 : 420}px; display:flex; align-items:center; justify-content:center;">
+          <div style="position:absolute; inset:0; border-radius:50%; border:2px dashed rgba(246,215,130,0.42);"></div>
+          ${[0,1,2,3,4].map(i => `<div id="dyn-orb-${i}" style="position:absolute; width:44px; height:44px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #FFF6D6, #E5B94C 65%, #7A5812); box-shadow:0 0 24px rgba(255,224,102,0.85);"></div>`).join('')}
+          ${media ? `<img id="dyn-float" src="${esc(media)}" style="max-width:74%; max-height:74%; object-fit:contain; position:relative; z-index:4; filter:drop-shadow(0 14px 36px rgba(0,0,0,0.55));" onerror="this.style.display='none'" />` : `<div class="serif" style="font-size:44px; color:#FFE066; text-align:center; z-index:4;">${esc(brand.brand_name || '核心赋能')}</div>`}
+        </div>
+        <div style="position:absolute; left:${isLand ? 70 : 60}px; right:${isLand ? 70 : 60}px; bottom:${isLand ? 58 : 110}px; display:grid; grid-template-columns:repeat(${Math.min(cards.length, isLand ? 4 : 2)}, 1fr); gap:22px;">
+          ${cards.map((c, ci) => `
+            <div id="dyn-c${ci + 1}" class="glass-card" style="padding:22px 24px;">
+              <div style="font-size:28px; font-weight:800; color:#FFE066; margin-bottom:8px;">${esc(c.title || c)}</div>
+              <div style="font-size:24px; color:#DFF5EF; line-height:1.45;">${esc(c.desc || '')}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+  }
+
+  if (stype === 'proof_spec') {
+    const proofs = items.length ? items.slice(0, 3) : [
+      { title: brand.function_1 || '权威品质认证' },
+      { title: brand.function_2 || '严选科学配方' },
+    ];
+    return `
+      <div class="scene-layer" style="background:linear-gradient(155deg, #F6F1E5 0%, #E7F0EC 100%); color:#123830;">
+        <div style="position:absolute; inset:${isLand ? '110px 100px 80px' : '150px 68px 120px'}; display:flex; flex-direction:${isLand ? 'row' : 'column'}; gap:48px; align-items:center; justify-content:center;">
+          <div style="flex:1; width:100%;">
+            <div id="dyn-badge" class="pill-gold" style="font-size:24px; margin-bottom:22px;">★ ${badge}</div>
+            <div id="dyn-title" class="serif" style="font-size:${isLand ? 68 : 66}px; color:#0E352D; line-height:1.2; margin-bottom:26px;">${title}</div>
+            <div style="display:flex; flex-direction:column; gap:18px;">
+              ${proofs.map((p, pi) => `
+                <div id="dyn-c${pi + 1}" style="position:relative; overflow:hidden; padding:22px 28px; border-radius:18px; background:#0F3B32; color:#FFFFFF; font-size:32px; font-weight:800; box-shadow:0 12px 28px rgba(15,59,50,0.22);">
+                  <div id="dyn-sh${pi + 1}" class="sheen"></div>
+                  <span style="color:#FFE066;">✓</span> ${esc(p.title || p)}
+                </div>
+              `).join('')}
+            </div>
+            ${sub ? `<div id="dyn-sub" style="margin-top:24px; font-size:28px; color:#2B5A50; font-weight:600;">${sub}</div>` : ''}
+          </div>
+          <div style="flex:0.85; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+            ${media ? `<img id="dyn-float" src="${esc(media)}" style="max-height:${isLand ? 580 : 520}px; max-width:100%; object-fit:contain; filter:drop-shadow(0 20px 36px rgba(14,53,45,0.25));" onerror="this.style.display='none'" />` : ''}
+            ${hi ? `<div class="pill-gold" style="margin-top:22px; font-size:28px;">${hi}</div>` : ''}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  if (stype === 'brand_finale') {
+    const footer = esc(brand.compliance_footer || '');
+    const prodImg = media || 'assets/official/product_combo.png';
+    return `
+      <div class="scene-layer" style="background:linear-gradient(160deg, #F8F2E4 0%, #E6EFEA 100%); color:#103830;">
+        <img src="assets/textures/bg_warm_sunlight.png" class="bg-cover" style="opacity:0.42;" onerror="this.style.display='none'" />
+        <div style="position:absolute; inset:${isLand ? '100px 100px 90px' : '140px 64px 120px'}; display:flex; flex-direction:${isLand ? 'row' : 'column'}; gap:42px; align-items:center; justify-content:center;">
+          <div style="flex:1; display:flex; justify-content:center; align-items:center;">
+            <img id="dyn-float" src="${esc(prodImg)}" style="max-height:${isLand ? 680 : 660}px; max-width:100%; object-fit:contain; filter:drop-shadow(0 26px 46px rgba(16,46,38,0.32));" onerror="this.style.display='none'" />
+          </div>
+          <div style="flex:1; text-align:${isLand ? 'left' : 'center'};">
+            <div id="dyn-badge" class="pill-gold" style="font-size:26px; margin-bottom:24px;">${badge}</div>
+            <div id="dyn-title" class="serif" style="font-size:${isLand ? 74 : 70}px; color:#0D352D; line-height:1.18; margin-bottom:22px;">${title}</div>
+            <div id="dyn-sub" style="font-size:${isLand ? 34 : 36}px; color:#23554B; font-weight:700; line-height:1.45; margin-bottom:26px;">${sub}</div>
+            ${hi ? `<div id="dyn-hi" style="display:inline-block; padding:16px 34px; border-radius:16px; background:#0F3B32; color:#FFE066; font-size:32px; font-weight:800;">${hi}</div>` : ''}
+          </div>
+        </div>
+        ${footer ? `<div class="compliance-bar">${footer}</div>` : ''}
+      </div>`;
+  }
+
+  // Default: custom_card (works for ANY e-commerce category!)
+  return `
+    <div class="scene-layer" style="background:radial-gradient(circle at 50% 30%, #154239 0%, #081815 80%);">
+      ${media ? `<img id="dyn-bg" class="bg-cover" src="${esc(media)}" style="opacity:0.42;" onerror="this.style.display='none'" />` : ''}
+      <div class="vignette"></div>
+      <div style="position:absolute; inset:${isLand ? '120px 120px 100px' : '170px 72px 140px'}; display:flex; flex-direction:column; justify-content:center; align-items:${isLand ? 'flex-start' : 'center'}; text-align:${isLand ? 'left' : 'center'};">
+        <div id="dyn-badge" class="pill-glass" style="font-size:26px; margin-bottom:26px;">${badge}</div>
+        <div id="dyn-title" class="serif" style="font-size:${isLand ? 82 : 78}px; line-height:1.2; margin-bottom:24px; max-width:1280px;">${title}</div>
+        <div id="dyn-sub" style="font-size:${isLand ? 38 : 38}px; color:#E7F2EC; line-height:1.5; max-width:1100px; margin-bottom:32px;">${sub}</div>
+        ${items.length ? `<div style="display:flex; flex-wrap:wrap; gap:18px; justify-content:${isLand ? 'flex-start' : 'center'}; margin-bottom:28px;">${items.map((it, i) => `<div id="dyn-c${i + 1}" class="glass-card" style="padding:18px 28px; font-size:28px; font-weight:700; color:#FFE066;">✓ ${esc(it.title || it)}</div>`).join('')}</div>` : ''}
+        ${hi ? `<div id="dyn-hi" class="pill-gold" style="font-size:30px;">${hi}</div>` : ''}
+      </div>
+    </div>`;
+}
+
+window.applyConfig = function(cfg) {
+  window.__STUDIO_CFG = cfg;
+  lastRenderedSceneId = null;
+  const brand = (cfg && cfg.brand) || {};
+  document.getElementById('tb-brand').textContent = brand.product_name || cfg.project_name || 'ecom-tvc-studio';
+};
+
+window.renderAt = async function(t) {
+  const cfg = window.__STUDIO_CFG;
+  if (!cfg) return;
+  const duration = Math.max(1, parseFloat(cfg.duration || 30));
+  const scenes = Array.isArray(cfg.scenes) && cfg.scenes.length ? cfg.scenes : [{
+    id: 's01', type: 'custom_card', start: 0, end: duration,
+    badge: 'STUDIO', title: cfg.project_name || '新项目', subtitle: '请在左侧添加分镜或导入参考视频'
+  }];
+
+  document.getElementById('prog-bar').style.width = `${(clamp(t / duration) * 100).toFixed(2)}%`;
+
+  // Animate motes
+  motes.forEach(m => {
+    const y = ((m.y0 - t * m.vy) % H + H) % H;
+    const x = (m.x0 + Math.sin(t * 0.9 + m.ph) * 20 + W) % W;
+    m.el.style.left = `${x.toFixed(1)}px`;
+    m.el.style.top = `${y.toFixed(1)}px`;
+  });
+
+  // Find active scene
+  let idx = scenes.findIndex(s => t >= parseFloat(s.start || 0) && t < parseFloat(s.end || duration));
+  if (idx < 0) idx = t < parseFloat(scenes[0].start || 0) ? 0 : scenes.length - 1;
+  const sc = scenes[idx];
+  const st = parseFloat(sc.start || 0);
+  const en = Math.max(st + 0.5, parseFloat(sc.end || duration));
+  const localT = Math.max(0, t - st);
+  const pScene = clamp(localT / (en - st));
+
+  const root = document.getElementById('scene-root');
+  const key = `${sc.id}_${idx}_${RATIO}`;
+  if (lastRenderedSceneId !== key) {
+    lastRenderedSceneId = key;
+    root.innerHTML = buildSceneDOM(sc, cfg, idx);
+  }
+
+  document.getElementById('tb-chap').textContent = sc.badge || `SCENE ${String(idx + 1).padStart(2, '0')}`;
+  const isLight = sc.type === 'proof_spec' || sc.type === 'brand_finale';
+  document.getElementById('tb-brand').style.color = isLight ? '#103830' : '#F7F1E3';
+  document.getElementById('tb-chap').style.color = isLight ? '#103830' : '#FFE066';
+
+  // Smooth staggered motion within scene
+  const fadeIn = easeExpoOut(prog(localT, 0, 0.45));
+  const fadeOut = 1 - clamp(prog(t, en - 0.25, en));
+  root.style.opacity = (fadeIn * (idx === scenes.length - 1 ? 1 : fadeOut)).toFixed(3);
+
+  const bg = document.getElementById('dyn-bg');
+  if (bg) bg.style.transform = `scale(${lerp(1.02, 1.08, pScene).toFixed(4)})`;
+
+  const fl = document.getElementById('dyn-float');
+  if (fl) fl.style.transform = `translateY(${(Math.sin(pScene * Math.PI * 2) * 10).toFixed(1)}px) scale(${lerp(0.96, 1.03, pScene).toFixed(3)})`;
+
+  const pulse = (Math.sin(t * 7.0) + 1) * 0.5;
+  const r1 = document.getElementById('dyn-r1');
+  const r2 = document.getElementById('dyn-r2');
+  if (r1 && r2) {
+    r1.setAttribute('r', (44 + pulse * 14).toFixed(1));
+    r2.setAttribute('r', (78 + pulse * 20).toFixed(1));
+  }
+
+  const beam = document.getElementById('dyn-beam');
+  if (beam) beam.style.top = `${(36 + Math.sin(pScene * Math.PI * 3) * 20).toFixed(1)}%`;
+
+  for (const vid of ['dyn-v1', 'dyn-v2']) {
+    const el = document.getElementById(vid);
+    if (el) {
+      const f = parseFloat(el.dataset.from || '85');
+      const to = parseFloat(el.dataset.to || '48');
+      el.textContent = `${Math.round(lerp(f, to, easeOutCubic(prog(localT, 0.35, Math.min(2.6, en - st - 0.3)))))}%`;
+    }
+  }
+
+  for (let i = 0; i < 5; i++) {
+    const orb = document.getElementById(`dyn-orb-${i}`);
+    if (orb) {
+      const ang = (i / 5) * Math.PI * 2 + localT * 0.85;
+      const rx = RATIO === '16x9' ? 185 : 205;
+      const ry = RATIO === '16x9' ? 135 : 155;
+      orb.style.left = `${(50 + (Math.cos(ang) * rx / (RATIO === '16x9' ? 380 : 420)) * 100).toFixed(1)}%`;
+      orb.style.top = `${(50 + (Math.sin(ang) * ry / (RATIO === '16x9' ? 380 : 420)) * 100).toFixed(1)}%`;
+      orb.style.transform = `translate(-50%,-50%) scale(${lerp(0.82, 1.12, (Math.sin(ang) + 1) * 0.5).toFixed(2)})`;
+    }
+  }
+
+  for (let ci = 1; ci <= 4; ci++) {
+    const c = document.getElementById(`dyn-c${ci}`);
+    if (c) {
+      const cp = easeExpoOut(prog(localT, 0.25 + (ci - 1) * 0.35, 0.80 + (ci - 1) * 0.35));
+      c.style.opacity = cp.toFixed(2);
+      c.style.transform = `translateY(${lerp(28, 0, cp).toFixed(1)}px)`;
+    }
+    const sh = document.getElementById(`dyn-sh${ci}`);
+    if (sh) sh.style.left = `${lerp(-180, 920, easeOutCubic(prog(localT, 0.65 + (ci - 1) * 0.35, 1.55 + (ci - 1) * 0.35))).toFixed(1)}px`;
+  }
+};
+
+(async function() {
+  const pid = qs.get('project');
+  if (pid) {
+    try {
+      const r = await fetch(`/api/projects/${encodeURIComponent(pid)}`);
+      if (r.ok) {
+        const d = await r.json();
+        window.applyConfig(d.config);
+      }
+    } catch (e) {}
+  }
+  const tInit = parseFloat(qs.get('t') || '0.8');
+  window.renderAt(isNaN(tInit) ? 0.8 : tInit);
+})();
+
+window.addEventListener('message', (ev) => {
+  if (!ev.data) return;
+  if (ev.data.type === 'applyConfig') { window.applyConfig(ev.data.config); window.renderAt(ev.data.t ?? 0.8); }
+  if (ev.data.type === 'seek') window.renderAt(ev.data.t);
+});
+</script>
+</body>
+</html>

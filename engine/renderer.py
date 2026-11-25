@@ -193,21 +193,30 @@ def _capture(cdp: SimpleCDP, t: float, fmt: str = "jpeg", quality: int = 94) -> 
     return base64.b64decode(cdp.call("Page.captureScreenshot", params)["data"])
 
 
-def render_preview_grid(scene_url: str, out_jpg: str, ratio: str = "9x16") -> str:
+def render_preview_grid(scene_url: str, out_jpg: str, ratio: str = "9x16", scenes: list[dict] | None = None) -> str:
     width, height = (1080, 1920) if ratio == "9x16" else (1920, 1080)
-    keyframes = [
-        (1.80, "S1 1.8s 痛点1"),
-        (5.50, "S2A 5.5s 痛点2"),
-        (9.20, "S2B 9.2s 痛点3"),
-        (13.80, "S3 13.8s 透视仪"),
-        (17.00, "S4 17.0s 单钙对比"),
-        (21.00, "S5A 21.0s 营养1"),
-        (25.60, "S5B 25.6s 营养2"),
-        (29.10, "S5C 29.1s 注入"),
-        (31.25, "S5C 31.2s 舒展"),
-        (36.80, "S6 36.8s 蓝帽规格"),
-        (42.50, "S7 42.5s 落版"),
-    ]
+    if scenes:
+        keyframes = []
+        for idx, sc in enumerate(scenes):
+            st = float(sc.get("start", 0.0))
+            en = float(sc.get("end", st + 3.0))
+            mid = round(st + (en - st) * 0.52, 2)
+            lbl = f"{sc.get('id', f'S{idx+1}')} {mid:.1f}s {str(sc.get('title', ''))[:8]}"
+            keyframes.append((mid, lbl))
+    else:
+        keyframes = [
+            (1.80, "S1 1.8s 痛点1"),
+            (5.50, "S2A 5.5s 痛点2"),
+            (9.20, "S2B 9.2s 痛点3"),
+            (13.80, "S3 13.8s 透视仪"),
+            (17.00, "S4 17.0s 单钙对比"),
+            (21.00, "S5A 21.0s 营养1"),
+            (25.60, "S5B 25.6s 营养2"),
+            (29.10, "S5C 29.1s 注入"),
+            (31.25, "S5C 31.2s 舒展"),
+            (36.80, "S6 36.8s 蓝帽规格"),
+            (42.50, "S7 42.5s 落版"),
+        ]
     os.makedirs(os.path.dirname(out_jpg), exist_ok=True)
     proc, ws_url = _launch_browser(width, height)
     frames = []
@@ -222,7 +231,8 @@ def render_preview_grid(scene_url: str, out_jpg: str, ratio: str = "9x16") -> st
         proc.kill()
 
     tw, th = (270, 480) if ratio == "9x16" else (560, 315)
-    cols, rows = (6, 2) if ratio == "9x16" else (4, 3)
+    cols = min(len(frames), 6 if ratio == "9x16" else 4) or 1
+    rows = (len(frames) + cols - 1) // cols
     pad, bar_h = 12, 32
     sheet = Image.new("RGB", (cols * tw + (cols + 1) * pad, rows * (th + bar_h) + (rows + 1) * pad), (24, 34, 31))
     draw = ImageDraw.Draw(sheet)

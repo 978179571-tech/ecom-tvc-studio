@@ -192,49 +192,89 @@ def build_and_mux_audio(project_dir: str, cfg: dict, video_noaudio: str, out_mp4
     bed = _build_seamless_bgm(bgm_path, target_dur, gain=bgm_gain) if enable_bgm else np.zeros((target_n, 2), dtype=np.float32)
 
     if enable_sfx:
-        scene_timings = cfg.get("scene_timings")
-        mt = lambda ts: map_canonical_to_real(ts, scene_timings)
         sfx_dir = os.path.join(project_dir, "audio", "sfx")
-        for ts, fn, g in [
-            (3.68, "sfx_03.wav", 0.36), (7.38, "sfx_03.wav", 0.36),
-            (11.08, "sfx_03.wav", 0.44), (15.08, "sfx_01.wav", 0.34),
-            (18.28, "sfx_06.wav", 0.42), (23.10, "sfx_05.wav", 0.34),
-            (29.88, "sfx_06.wav", 0.48), (34.28, "sfx_05.wav", 0.38),
-            (38.98, "sfx_06.wav", 0.44),
-        ]:
-            _add_real_sfx(bed, os.path.join(sfx_dir, fn), mt(ts), gain=g * sfx_scale)
+        if cfg.get("template_mode") == "dynamic" or cfg.get("scenes"):
+            scenes = cfg.get("scenes") or []
+            thump = _synth_pain_thump()
+            pop_lo, pop_hi = _synth_pop(280.0, 580.0), _synth_pop(340.0, 700.0)
+            for idx, sc in enumerate(scenes):
+                st = float(sc.get("start", 0.0))
+                en = float(sc.get("end", st + 3.0))
+                stype = sc.get("type", "custom_card")
+                if idx > 0:
+                    _add_real_sfx(bed, os.path.join(sfx_dir, "sfx_03.wav" if idx % 2 else "sfx_06.wav"), max(0.0, st - 0.12), gain=0.38 * sfx_scale)
+                if stype == "hero_hook":
+                    _add_stereo(bed, thump, st + min(1.2, (en - st) * 0.35), gain=0.52 * sfx_scale)
+                elif stype in ("data_hud", "split_contrast", "custom_card"):
+                    _add_stereo(bed, pop_lo, st + 0.55, gain=0.45 * sfx_scale, pan=-0.2)
+                    if en - st > 2.0:
+                        _add_stereo(bed, pop_hi, st + 1.25, gain=0.45 * sfx_scale, pan=0.2)
+                elif stype == "orbit_cards":
+                    _add_stereo(bed, pop_lo, st + 0.50, gain=0.44 * sfx_scale, pan=-0.25)
+                    _add_stereo(bed, pop_hi, st + 1.35, gain=0.44 * sfx_scale, pan=0.25)
+                    if en - st > 3.5:
+                        _add_stereo(bed, _synth_bloom(1.35), max(st + 1.8, en - 1.6), gain=0.46 * sfx_scale)
+                elif stype == "proof_spec":
+                    _add_stereo(bed, _synth_ding(1174.66), st + 0.65, gain=0.44 * sfx_scale)
+                    _add_stereo(bed, _synth_ding(1396.91), st + 1.25, gain=0.46 * sfx_scale)
+                elif stype == "brand_finale":
+                    _add_stereo(bed, _synth_bloom(1.55), st + 0.20, gain=0.46 * sfx_scale)
+                    _add_stereo(bed, _synth_ding(1046.50, 0.45), st + 0.95, gain=0.38 * sfx_scale)
+        else:
+            scene_timings = cfg.get("scene_timings")
+            mt = lambda ts: map_canonical_to_real(ts, scene_timings)
+            for ts, fn, g in [
+                (3.68, "sfx_03.wav", 0.36), (7.38, "sfx_03.wav", 0.36),
+                (11.08, "sfx_03.wav", 0.44), (15.08, "sfx_01.wav", 0.34),
+                (18.28, "sfx_06.wav", 0.42), (23.10, "sfx_05.wav", 0.34),
+                (29.88, "sfx_06.wav", 0.48), (34.28, "sfx_05.wav", 0.38),
+                (38.98, "sfx_06.wav", 0.44),
+            ]:
+                _add_real_sfx(bed, os.path.join(sfx_dir, fn), mt(ts), gain=g * sfx_scale)
 
-        thump = _synth_pain_thump()
-        for ts in (1.65, 5.20, 8.70):
-            _add_stereo(bed, thump, mt(ts), gain=0.58 * sfx_scale)
-        tick = _synth_tick()
-        for ts in (4.62, 4.86, 5.12, 5.42, 5.76, 6.18):
-            _add_stereo(bed, tick, mt(ts), gain=0.25 * sfx_scale)
-        _add_stereo(bed, _synth_riser(0.72, 180.0, 1200.0), mt(10.42), gain=0.45 * sfx_scale)
+            thump = _synth_pain_thump()
+            for ts in (1.65, 5.20, 8.70):
+                _add_stereo(bed, thump, mt(ts), gain=0.58 * sfx_scale)
+            tick = _synth_tick()
+            for ts in (4.62, 4.86, 5.12, 5.42, 5.76, 6.18):
+                _add_stereo(bed, tick, mt(ts), gain=0.25 * sfx_scale)
+            _add_stereo(bed, _synth_riser(0.72, 180.0, 1200.0), mt(10.42), gain=0.45 * sfx_scale)
 
-        pop_lo, pop_hi = _synth_pop(280.0, 580.0), _synth_pop(340.0, 700.0)
-        for ts, p, pan in [
-            (11.75, pop_lo, -0.25), (12.40, pop_hi, 0.25), (13.15, pop_lo, 0.0),
-            (15.55, pop_lo, 0.0), (16.45, pop_hi, 0.0),
-            (18.65, pop_lo, -0.30), (19.80, pop_hi, 0.30),
-            (23.35, pop_lo, -0.30), (24.55, pop_hi, 0.30),
-            (36.75, pop_lo, 0.20), (37.25, pop_hi, 0.20),
-            (40.75, pop_lo, 0.0), (41.35, pop_hi, 0.0),
-        ]:
-            _add_stereo(bed, p, mt(ts), gain=0.48 * sfx_scale, pan=pan)
+            pop_lo, pop_hi = _synth_pop(280.0, 580.0), _synth_pop(340.0, 700.0)
+            for ts, p, pan in [
+                (11.75, pop_lo, -0.25), (12.40, pop_hi, 0.25), (13.15, pop_lo, 0.0),
+                (15.55, pop_lo, 0.0), (16.45, pop_hi, 0.0),
+                (18.65, pop_lo, -0.30), (19.80, pop_hi, 0.30),
+                (23.35, pop_lo, -0.30), (24.55, pop_hi, 0.30),
+                (36.75, pop_lo, 0.20), (37.25, pop_hi, 0.20),
+                (40.75, pop_lo, 0.0), (41.35, pop_hi, 0.0),
+            ]:
+                _add_stereo(bed, p, mt(ts), gain=0.48 * sfx_scale, pan=pan)
 
-        _add_stereo(bed, _synth_riser(1.75, 240.0, 1400.0), mt(28.12), gain=0.42 * sfx_scale)
-        _add_stereo(bed, _synth_bloom(1.55), mt(29.88), gain=0.54 * sfx_scale)
-        _add_stereo(bed, _synth_ding(1174.66), mt(35.02), gain=0.46 * sfx_scale)
-        _add_stereo(bed, _synth_ding(1396.91), mt(35.62), gain=0.48 * sfx_scale)
-        _add_stereo(bed, _synth_bloom(1.65), mt(39.18), gain=0.46 * sfx_scale)
-        _add_stereo(bed, _synth_ding(1046.50, 0.45), mt(40.05), gain=0.38 * sfx_scale)
+            _add_stereo(bed, _synth_riser(1.75, 240.0, 1400.0), mt(28.12), gain=0.42 * sfx_scale)
+            _add_stereo(bed, _synth_bloom(1.55), mt(29.88), gain=0.54 * sfx_scale)
+            _add_stereo(bed, _synth_ding(1174.66), mt(35.02), gain=0.46 * sfx_scale)
+            _add_stereo(bed, _synth_ding(1396.91), mt(35.62), gain=0.48 * sfx_scale)
+            _add_stereo(bed, _synth_bloom(1.65), mt(39.18), gain=0.46 * sfx_scale)
+            _add_stereo(bed, _synth_ding(1046.50, 0.45), mt(40.05), gain=0.38 * sfx_scale)
 
     fi, fo = int(0.30 * SR), int(1.80 * SR)
     bed[:fi] *= np.linspace(0.0, 1.0, fi, dtype=np.float32)[:, None]
     bed[-fo:] *= np.linspace(1.0, 0.0, fo, dtype=np.float32)[:, None]
 
     if enable_vo:
+        if (cfg.get("template_mode") == "dynamic" or cfg.get("scenes")) and not audio_cfg.get("vo_lines"):
+            audio_cfg = dict(audio_cfg)
+            audio_cfg["vo_lines"] = [
+                {
+                    "id": sc.get("id", f"s{i + 1:02d}"),
+                    "start": float(sc.get("start", 0.0)) + 0.08,
+                    "max_dur": max(0.8, float(sc.get("end", 3.0)) - float(sc.get("start", 0.0)) - 0.18),
+                    "text": sc.get("vo_text", ""),
+                }
+                for i, sc in enumerate(cfg.get("scenes") or [])
+                if str(sc.get("vo_text", "")).strip()
+            ]
         vo_track, duck_mask = asyncio.run(_build_vo_track(project_dir, audio_cfg, target_n))
         k = np.ones(int(0.15 * SR), dtype=np.float32) / int(0.15 * SR)
         smooth_duck = np.convolve(duck_mask, k, mode="same")

@@ -9,10 +9,14 @@ import time
 import urllib.parse
 from http.server import ThreadingHTTPServer
 
-from app import HOST, PORT, StudioHandler, list_projects, load_project_config, project_path, safe_id, save_project_config
+from app import (
+    HOST, PORT, StudioHandler, create_project_dir, list_projects,
+    load_project_config, project_path, resolve_template_rel, safe_id, save_project_config,
+)
 from engine.audio_mixer import build_and_mux_audio
 from engine.compliance import check_compliance
 from engine.prompt_builder import build_prompt_pack
+from engine.ref_analyzer import analyze_reference_video
 from engine.renderer import extract_video_frames, render_preview_grid, render_video
 from engine.srt_sync import reset_scene_timings, sync_srt_to_config
 
@@ -36,9 +40,16 @@ def main():
 
     sub.add_parser("list", help="List all projects")
 
-    p_init = sub.add_parser("init", help="Create a new project cloned from demo")
+    p_init = sub.add_parser("init", help="Create a new project (universal dynamic mode by default)")
     p_init.add_argument("--id", required=True)
     p_init.add_argument("--name", required=True)
+    p_init.add_argument("--category", default="general", choices=["blue_hat", "food", "skincare", "general"])
+    p_init.add_argument("--mode", default="dynamic", choices=["dynamic", "sanjin_demo"])
+
+    p_ref = sub.add_parser("analyze-ref", help="Deconstruct a reference MP4 into storyboard grid, shot cuts & starter scenes")
+    p_ref.add_argument("--video", required=True, help="Path to reference MP4 video")
+    p_ref.add_argument("--project", default="", help="Optional project ID to apply the extracted scene skeleton into")
+    p_ref.add_argument("--extract-audio", action="store_true", help="Also extract reference audio to audio/bgm_ref.wav")
 
     p_chk = sub.add_parser("check", help="Run blue-hat compliance check")
     p_chk.add_argument("--project", required=True)
@@ -78,16 +89,37 @@ def main():
 
     if args.cmd == "init":
         pid = safe_id(args.id)
-        dst = project_path(pid)
-        if os.path.exists(dst):
-            raise SystemExit(f"Project already exists: {pid}")
-        shutil.copytree(project_path("sanjin-antang"), dst, ignore=shutil.ignore_patterns("out"))
-        os.makedirs(os.path.join(dst, "out"), exist_ok=True)
-        cfg = load_project_config(pid)
-        cfg["project_id"] = pid
-        cfg["project_name"] = args.name
-        save_project_config(pid, cfg)
-        print(json.dumps({"ok": True, "project_id": pid, "config_path": os.path.join(dst, "project.json")}, ensure_ascii=False, indent=2))
+        try:
+            cfg = create_project_dir(pid, args.name, category=args.category, mode=args.mode)
+        except ValueError as exc:
+            raise SystemExit(str(exc))
+        print(json.dumps({
+            "ok": True,
+            "project_id": pid,
+            "mode": args.mode,
+            "category": args.category,
+            "config_path": os.path.join(project_path(pid), "project.json"),
+        }, ensure_ascii=False, indent=2))
+        return
+
+    if args.cmd == "analyze-ref":
+        if args.project:
+            pid = safe_id(args.project)
+            pdir = project_path(pid)
+            out_dir = os.path.join(pdir, "out", "_ref")
+            bgm_dst = os.path.join(pdir, "audio", "bgm_ref.wav") if args.extract_audio else None
+            res = analyze_reference_video(args.video, out_dir, extract_audio_path=bgm_dst)
+            cfg = load_project_config(pid)
+            cfg["template_mode"] = "dynamic"
+            cfg["duration"] = res["meta"]["duration"]
+            cfg["scenes"] = res["suggested_scenes"]
+            save_project_config(pid, cfg)
+            print(json.dumps({"ok": True, "project_id": pid, **res}, ensure_ascii=False, indent=2))
+        else:
+            out_dir = os.path.join(os.path.dirname(os.path.abspath(args.video)), "_ref_analysis")
+            bgm_dst = os.path.join(out_dir, "bgm_ref.wav") if args.extract_audio else None
+            res = analyze_reference_video(args.video, out_dir, extract_audio_path=bgm_dst)
+            print(json.dumps({"ok": True, **res}, ensure_ascii=False, indent=2))
         return
 
     if args.cmd == "check":
@@ -133,12 +165,12 @@ def main():
 
     if args.cmd == "preview":
         pid = safe_id(args.project)
-        tpl = "tvc_9x16.html" if args.ratio == "9x16" else "tvc_16x9.html"
+        cfg = load_project_config(pid)
         out_jpg = os.path.join(project_path(pid), "out", f"preview_{args.ratio}.jpg")
 
         def run(port):
-            url = f"http://{HOST}:{port}/templates/{tpl}?project={urllib.parse.quote(pid)}"
-            return render_preview_grid(url, out_jpg, ratio=args.ratio)
+            url = f"http://{HOST}:{port}{resolve_template_rel(pid, cfg, args.ratio)}"
+            return render_preview_grid(url, out_jpg, ratio=args.ratio, scenes=cfg.get("scenes"))
 
         path = _with_temp_server(run)
         print(json.dumps({"ok": True, "preview_jpg": path}, ensure_ascii=False))
@@ -148,14 +180,13 @@ def main():
         pid = safe_id(args.project)
         pdir = project_path(pid)
         cfg = load_project_config(pid)
-        tpl = "tvc_9x16.html" if args.ratio == "9x16" else "tvc_16x9.html"
         out_dir = os.path.join(pdir, "out")
         os.makedirs(out_dir, exist_ok=True)
         noaudio = os.path.join(out_dir, f"{pid}_{args.ratio}_noaudio.mp4")
         final_mp4 = args.out or os.path.join(out_dir, f"{pid}_{args.ratio}_{time.strftime('%Y%m%d_%H%M%S')}.mp4")
 
         def run(port):
-            url = f"http://{HOST}:{port}/templates/{tpl}?project={urllib.parse.quote(pid)}"
+            url = f"http://{HOST}:{port}{resolve_template_rel(pid, cfg, args.ratio)}"
             render_video(url, noaudio, ratio=args.ratio, duration=float(cfg.get("duration", 45.0)), fps=int(cfg.get("fps", 24)))
             build_and_mux_audio(pdir, cfg, noaudio, final_mp4)
             return final_mp4

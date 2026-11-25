@@ -1,7 +1,107 @@
-"""Generate ready-to-copy Chinese image & image-to-video prompts from project.json."""
+"""Generate ready-to-copy Chinese image & image-to-video prompts from project.json.
+
+Supports BOTH:
+  - Universal dynamic scenes[] mode (generates tailored prompts per scene block & category)
+  - Legacy sanjin-antang demo mode
+"""
+
+from __future__ import annotations
+
+SCENE_TYPE_GUIDE = {
+    "hero_hook": ("痛点实拍首帧 + 图生视频", "16:9", "可灵 / 即梦 / Seedance / Gemini"),
+    "data_hud": ("科学机理 / 透视视觉图", "1:1 / 16:9", "GPT Image / Gemini / 即梦"),
+    "split_contrast": ("对照方案静物图（无标纯色）", "1:1", "GPT Image / 即梦"),
+    "orbit_cards": ("核心成分 / 卖点主体与类比静物", "1:1", "GPT Image / 即梦"),
+    "proof_spec": ("官方权威背书与产品规格特写", "原图优先", "使用官方原图（零 AI 重绘）"),
+    "brand_finale": ("暖阳实景大牌桌面背景", "16:9", "GPT Image / Midjourney / 即梦"),
+    "custom_card": ("通用高质感商业场景配图", "16:9", "Gemini / 即梦 / Midjourney"),
+}
+
+
+def _build_dynamic_prompts(cfg: dict) -> list[dict]:
+    brand = cfg.get("brand") or {}
+    prod_name = brand.get("product_name") or cfg.get("project_name") or "本产品"
+    cat_tag = brand.get("category_tag") or "电商商业短视频"
+    scenes = cfg.get("scenes") or []
+    packs: list[dict] = []
+
+    for idx, sc in enumerate(scenes):
+        stype = sc.get("type", "custom_card")
+        title = sc.get("title", f"第 {idx + 1} 幕")
+        sub = sc.get("subtitle", "")
+        badge = sc.get("badge", "")
+        vo = sc.get("vo_text", "")
+        group, ratio, model = SCENE_TYPE_GUIDE.get(stype, SCENE_TYPE_GUIDE["custom_card"])
+
+        if stype == "hero_hook":
+            p_img = (
+                f"16:9 宽银幕 35mm 电影商业摄影质感，主题：{cat_tag}。"
+                f"真实中国消费人群生活实景，画面直观传达「{title}」（{sub}）。"
+                f"自然柔和窗光，浅景深电影虚化，真实情绪克制不夸张，无文字、无 Logo、无水印。"
+            )
+            p_vid = (
+                f"真实 35mm 电影商拍质感，{max(3, round(float(sc.get('end', 4)) - float(sc.get('start', 0))))} 秒 16:9。"
+                f"延续首帧人物与光线，自然呈现「{title}」的真实动作与情绪微表情，"
+                f"镜头缓慢平稳微推，无字幕、无水印。"
+            )
+        elif stype == "data_hud":
+            p_img = (
+                f"高端医学/科研级极简商业可视化摄影，深蓝青或深墨绿科技质感背景。"
+                f"围绕「{title}」（{sub}）呈现清晰通透的核心机理/结构透视视觉主体，柔和边缘发光，"
+                f"主体居中留出上下排版安全区，无任何文字、无数字、无水印。"
+            )
+            p_vid = ""
+        elif stype == "split_contrast":
+            p_img = (
+                f"极简商业棚拍静物，1:1 方图纯白或浅灰背景。呈现无任何品牌文字与图案的纯白/素色对照单品，"
+                f"用于与「{prod_name}」做对比（痛点归因：{title} / {sub}）。柔和漫反射棚拍光，无文字无水印。"
+            )
+            p_vid = ""
+        elif stype == "orbit_cards":
+            items_txt = "、".join([str(it.get("title") or it) for it in (sc.get("items") or []) if it])
+            p_img = (
+                f"高端商业杂志微距棚拍摄影，1:1 方图纯白底（#FFFFFF），风格统一。"
+                f"围绕「{title}」（{items_txt or sub}）拍摄洁净通透的核心成分/天然原料静物，"
+                f"主体居中占画幅 65%–70%，柔和暖白棚拍光，无地面重阴影、无文字、无水印。"
+            )
+            p_vid = ""
+        elif stype == "proof_spec":
+            p_img = (
+                f"【官方原图规范】本幕「{title}」请直接使用「{prod_name}」官方高清原图（产品瓶/盒、品牌 Logo、认证标识或检测报告原图），"
+                f"切勿使用 AI 重绘包装文字，确保 100% 真实合规。"
+            )
+            p_vid = ""
+        elif stype == "brand_finale":
+            p_img = (
+                f"真实高端商业广告实景背景摄影，16:9 横屏。明亮通透的现代温暖场景，清晨柔和阳光洒在前景浅米色洞石"
+                f"或温润原木桌面上，大光圈 f/1.8 奶油虚化背景，前景桌面中央留出干净空位便于合成「{prod_name}」官方盒瓶原图。"
+                f"纯摄影背景，无人物、无产品包装、无文字、无水印。"
+            )
+            p_vid = ""
+        else:
+            p_img = (
+                f"高端商业电商主图摄影，16:9 宽银幕。围绕「{title}」（{sub or vo}），展现「{prod_name}」的真实使用氛围与质感，"
+                f"光线高级通透，画面留出标题安全区，无文字、无水印。"
+            )
+            p_vid = ""
+
+        packs.append({
+            "id": sc.get("id", f"s{idx + 1:02d}"),
+            "group": f"{group}（{badge or sc.get('id', '')}）",
+            "title": f"第 {idx + 1} 幕 · {title}",
+            "ratio": ratio,
+            "recommended_model": model,
+            "prompt_image": p_img,
+            "prompt_video": p_vid,
+        })
+
+    return packs
 
 
 def build_prompt_pack(cfg: dict) -> list[dict]:
+    if cfg.get("template_mode") == "dynamic" or cfg.get("scenes"):
+        return _build_dynamic_prompts(cfg)
+
     brand = cfg.get("brand", {})
     pains = cfg.get("pain_points", {})
     nutr = cfg.get("nutrients", {})

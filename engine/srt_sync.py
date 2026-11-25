@@ -89,10 +89,72 @@ def _group_entries_to_n(entries: list[dict[str, Any]], n_scenes: int) -> list[li
 
 
 def sync_srt_to_config(cfg: dict[str, Any], srt_text: str) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Align a project config's 10 scenes, duration, and VO lines to an SRT file."""
+    """Align a project config's scenes, duration, and VO lines to an SRT file.
+
+    - Dynamic mode (cfg["scenes"] present): aligns arbitrary N scenes directly to SRT entries.
+    - Legacy mode: maps SRT onto the 10 canonical commercial scenes.
+    """
     entries = parse_srt(srt_text)
-    n = len(CANONICAL_SCENES)
     last_end = max(e["end"] for e in entries)
+    total_dur = round(max(last_end + 1.0, 6.0), 2)
+
+    if cfg.get("template_mode") == "dynamic" or cfg.get("scenes"):
+        existing = list(cfg.get("scenes") or [])
+        n_target = len(existing) if existing else len(entries)
+        if len(entries) >= n_target and n_target > 0:
+            groups = _group_entries_to_n(entries, n_target)
+        else:
+            groups = [[e] for e in entries]
+            n_target = len(groups)
+
+        new_scenes: list[dict[str, Any]] = []
+        vo_lines: list[dict[str, Any]] = []
+        boundaries: list[float] = [0.0]
+        for i in range(n_target - 1):
+            cur_end = groups[i][-1]["end"]
+            nxt_start = groups[i + 1][0]["start"]
+            mid = round((cur_end + nxt_start) * 0.5, 2) if nxt_start >= cur_end else round(nxt_start, 2)
+            mid = max(boundaries[-1] + 0.4, min(mid, total_dur - (n_target - 1 - i) * 0.4))
+            boundaries.append(round(mid, 2))
+        boundaries.append(total_dur)
+
+        for i in range(n_target):
+            grp = groups[i]
+            st, en = boundaries[i], boundaries[i + 1]
+            txt = "，".join(e["text"] for e in grp if e["text"])
+            base = dict(existing[i]) if i < len(existing) else {
+                "id": f"s{i + 1:02d}",
+                "type": "hero_hook" if i == 0 else ("brand_finale" if i == n_target - 1 else "custom_card"),
+                "badge": f"SCENE {i + 1:02d}",
+                "title": txt[:14] if txt else f"第 {i + 1} 幕",
+                "subtitle": txt[14:36] if len(txt) > 14 else "",
+                "highlight": "",
+                "media": "",
+                "media_slot": "",
+                "items": [],
+            }
+            base["start"] = st
+            base["end"] = en
+            base["vo_text"] = txt
+            new_scenes.append(base)
+
+            vo_start = round(max(st + 0.05, grp[0]["start"]), 2)
+            max_dur = round(max(0.6, en - vo_start - 0.12), 2)
+            vo_lines.append({"id": base["id"], "start": vo_start, "max_dur": max_dur, "text": txt})
+
+        cfg["duration"] = total_dur
+        cfg["scenes"] = new_scenes
+        cfg.setdefault("audio", {})
+        cfg["audio"]["vo_lines"] = vo_lines
+        cfg["audio"]["enable_vo"] = True
+        return cfg, {
+            "srt_entries": len(entries),
+            "scenes": len(new_scenes),
+            "duration": total_dur,
+            "mode": "dynamic",
+        }
+
+    n = len(CANONICAL_SCENES)
     total_dur = round(max(last_end + 1.0, 12.0), 2)
 
     raw_windows: list[dict[str, Any]] = []

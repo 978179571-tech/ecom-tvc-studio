@@ -143,44 +143,75 @@
       <div id="comp-alerts" style="display:none;" class="sec"></div>
 
       <div class="sec">
-        <h3>品牌与蓝帽合规 <button class="btn-primary" style="padding:5px 12px; font-size:12px;" onclick="saveConfig()">保存并刷新预览</button></h3>
+        <h3>🎬 参考视频智能拉片（按参考片节奏自动拆幕）</h3>
+        <div class="upload-row">
+          <span>上传任意参考视频 MP4（自动拆关键帧图 + 生成分镜骨架 + 提取底乐）</span>
+          <input type="file" accept="video/mp4,video/*" onchange="analyzeRefVideo(this)" />
+        </div>
+        <div id="ref-result" style="margin-top:8px; font-size:12px; color:var(--muted);">也可不传参考视频，直接在下方自由增删分镜或由 AI Agent 原创脚本。</div>
+      </div>
+
+      <div class="sec">
+        <h3>品牌与合规模式 <button class="btn-primary" style="padding:5px 12px; font-size:12px;" onclick="saveConfig()">保存并刷新预览</button></h3>
         <div class="grid2">
           <div class="field"><label>产品全称</label><input id="f-product_name" type="text" /></div>
+          <div class="field">
+            <label>品类合规模式</label>
+            <select id="f-category" style="width:100%;">
+              <option value="general">通用电商（拦截绝对化极限词）</option>
+              <option value="blue_hat">蓝帽保健食品（严审医疗词 + 批号 + 必填声明）</option>
+              <option value="food">普通/功能食品（禁医疗词 + 禁极限词）</option>
+              <option value="skincare">护肤美妆（禁医疗/根治词 + 禁极限词）</option>
+            </select>
+          </div>
           <div class="field"><label>人群/类目标签</label><input id="f-category_tag" type="text" /></div>
-          <div class="field"><label>落版名称第一行</label><input id="f-product_name_line1" type="text" /></div>
-          <div class="field"><label>落版名称第二行</label><input id="f-product_name_line2" type="text" /></div>
-          <div class="field"><label>批准文号</label><input id="f-approval_no" type="text" /></div>
-          <div class="field"><label>规格（如 42粒 / 瓶）</label><input id="f-spec_pack" type="text" /></div>
-          <div class="field"><label>批准功能 1</label><input id="f-function_1" type="text" /></div>
-          <div class="field"><label>批准功能 2</label><input id="f-function_2" type="text" /></div>
+          <div class="field"><label>批准文号（蓝帽可选）</label><input id="f-approval_no" type="text" /></div>
         </div>
-        <div class="field"><label>落版金色徽章</label><input id="f-finale_badge" type="text" /></div>
-        <div class="field"><label>底部必填合规声明</label><input id="f-compliance_footer" type="text" /></div>
+        <div class="field"><label>底部合规声明（蓝帽必填）</label><input id="f-compliance_footer" type="text" /></div>
       </div>
 
-      <div class="sec">
-        <h3>开场三大痛点文案（S1 / S2A / S2B）</h3>
-        <div class="grid2">
-          <div class="field"><label>开场主标题 1</label><input id="f-hook_line1" type="text" /></div>
-          <div class="field"><label>开场主标题 2</label><input id="f-hook_line2" type="text" /></div>
-          <div class="field"><label>开场副标题</label><input id="f-hook_sub" type="text" /></div>
-          <div class="field"><label>痛点 1 标签</label><input id="f-pain1_tag" type="text" /></div>
-          <div class="field"><label>痛点 2 标签</label><input id="f-pain2_tag" type="text" /></div>
-          <div class="field"><label>痛点 3 标题</label><input id="f-pain3_title" type="text" /></div>
-        </div>
+      <div id="dynamic-scenes-panel" class="sec" style="display:none;">
+        <h3>自由分镜积木编排（任意幕数 · 任意时长） <button class="btn-mint" style="padding:4px 10px; font-size:12px;" onclick="addDynamicScene()">+ 新增一幕</button></h3>
+        <div id="dynamic-scenes-list"></div>
       </div>
 
-      <div class="sec">
-        <h3>五重营养与食材类比（S5）</h3>
-        <div class="grid2">
-          <div class="field"><label>卡片 1 含量标</label><input id="f-card1_pill" type="text" /></div>
-          <div class="field"><label>卡片 1 类比</label><input id="f-card1_analogy" type="text" /></div>
-          <div class="field"><label>卡片 2 含量标</label><input id="f-card2_pill" type="text" /></div>
-          <div class="field"><label>卡片 2 类比</label><input id="f-card2_analogy" type="text" /></div>
-          <div class="field"><label>卡片 3 含量标</label><input id="f-card3_pill" type="text" /></div>
-          <div class="field"><label>卡片 3 类比</label><input id="f-card3_analogy" type="text" /></div>
-          <div class="field"><label>卡片 4 含量标</label><input id="f-card4_pill" type="text" /></div>
-          <div class="field"><label>卡片 4 类比</label><input id="f-card4_analogy" type="text" /></div>
+      <div id="legacy-copy-panel">
+        <div class="sec">
+          <h3>落版与规格（三金 Demo 字段）</h3>
+          <div class="grid2">
+            <div class="field"><label>落版名称第一行</label><input id="f-product_name_line1" type="text" /></div>
+            <div class="field"><label>落版名称第二行</label><input id="f-product_name_line2" type="text" /></div>
+            <div class="field"><label>规格（如 42粒 / 瓶）</label><input id="f-spec_pack" type="text" /></div>
+            <div class="field"><label>批准功能 1</label><input id="f-function_1" type="text" /></div>
+            <div class="field"><label>批准功能 2</label><input id="f-function_2" type="text" /></div>
+            <div class="field"><label>落版金色徽章</label><input id="f-finale_badge" type="text" /></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <h3>开场三大痛点文案（S1 / S2A / S2B）</h3>
+          <div class="grid2">
+            <div class="field"><label>开场主标题 1</label><input id="f-hook_line1" type="text" /></div>
+            <div class="field"><label>开场主标题 2</label><input id="f-hook_line2" type="text" /></div>
+            <div class="field"><label>开场副标题</label><input id="f-hook_sub" type="text" /></div>
+            <div class="field"><label>痛点 1 标签</label><input id="f-pain1_tag" type="text" /></div>
+            <div class="field"><label>痛点 2 标签</label><input id="f-pain2_tag" type="text" /></div>
+            <div class="field"><label>痛点 3 标题</label><input id="f-pain3_title" type="text" /></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <h3>五重营养与食材类比（S5）</h3>
+          <div class="grid2">
+            <div class="field"><label>卡片 1 含量标</label><input id="f-card1_pill" type="text" /></div>
+            <div class="field"><label>卡片 1 类比</label><input id="f-card1_analogy" type="text" /></div>
+            <div class="field"><label>卡片 2 含量标</label><input id="f-card2_pill" type="text" /></div>
+            <div class="field"><label>卡片 2 类比</label><input id="f-card2_analogy" type="text" /></div>
+            <div class="field"><label>卡片 3 含量标</label><input id="f-card3_pill" type="text" /></div>
+            <div class="field"><label>卡片 3 类比</label><input id="f-card3_analogy" type="text" /></div>
+            <div class="field"><label>卡片 4 含量标</label><input id="f-card4_pill" type="text" /></div>
+            <div class="field"><label>卡片 4 类比</label><input id="f-card4_analogy" type="text" /></div>
+          </div>
         </div>
       </div>
     </div>
@@ -349,8 +380,16 @@ function setRatio(r) {
   reloadFrame();
 }
 
+function isDynamicCfg(cfg) {
+  return !!(cfg && (cfg.template_mode === 'dynamic' || Array.isArray(cfg.scenes)));
+}
+
 function reloadFrame() {
   fitPreview();
+  if (isDynamicCfg(currentCfg)) {
+    document.getElementById('preview-frame').src = `/templates/dynamic_studio.html?project=${encodeURIComponent(currentPid)}&ratio=${currentRatio}&t=${curTime.toFixed(2)}&_=${Date.now()}`;
+    return;
+  }
   const tpl = currentRatio === '9x16' ? 'tvc_9x16.html' : 'tvc_16x9.html';
   document.getElementById('preview-frame').src = `/templates/${tpl}?project=${encodeURIComponent(currentPid)}&t=${curTime.toFixed(2)}&_=${Date.now()}`;
 }
@@ -386,7 +425,15 @@ function syncTimelineUI(cfg) {
 
   const statusEl = document.getElementById('srt-status');
   const chipsEl = document.getElementById('scene-chips');
-  if (Array.isArray(cfg.scene_timings) && cfg.scene_timings.length) {
+  if (isDynamicCfg(cfg) && Array.isArray(cfg.scenes) && cfg.scenes.length) {
+    if (statusEl) statusEl.innerHTML = `<span style="color:var(--mint);">✓ 自由分镜模式 · 共 ${cfg.scenes.length} 幕 · 总时长 ${currentDuration.toFixed(1)}s</span>`;
+    if (chipsEl) {
+      chipsEl.innerHTML = cfg.scenes.map((s, idx) => {
+        const mid = ((parseFloat(s.start || 0) + parseFloat(s.end || currentDuration)) * 0.5).toFixed(2);
+        return `<span class="chip" onclick="seekTo(${mid})">${idx + 1}. ${(s.title || s.id).slice(0, 8)} (${s.start}s)</span>`;
+      }).join('');
+    }
+  } else if (Array.isArray(cfg.scene_timings) && cfg.scene_timings.length) {
     if (statusEl) statusEl.innerHTML = `<span style="color:var(--mint);">✓ 已按 SRT 字幕对齐 10 幕 · 总时长 ${currentDuration.toFixed(1)}s</span>`;
     if (chipsEl) {
       chipsEl.innerHTML = cfg.scene_timings.map(s => {
@@ -460,8 +507,124 @@ async function loadProject(pid) {
   reloadFrame();
 }
 
+const SCENE_TYPES = [
+  ['hero_hook', '痛点钩子 (hero_hook)'],
+  ['data_hud', '机理数据仪表盘 (data_hud)'],
+  ['split_contrast', '斜切方案对比 (split_contrast)'],
+  ['orbit_cards', '成分环绕类比 (orbit_cards)'],
+  ['proof_spec', '权威背书规格 (proof_spec)'],
+  ['brand_finale', '品牌大牌落版 (brand_finale)'],
+  ['custom_card', '通用卖点冲击卡 (custom_card)'],
+];
+
+function renderDynamicScenes(cfg) {
+  const dyn = isDynamicCfg(cfg);
+  document.getElementById('dynamic-scenes-panel').style.display = dyn ? 'block' : 'none';
+  document.getElementById('legacy-copy-panel').style.display = dyn ? 'none' : 'block';
+  if (!dyn) return;
+  const list = document.getElementById('dynamic-scenes-list');
+  const scenes = cfg.scenes || [];
+  list.innerHTML = scenes.map((sc, i) => `
+    <div style="border:1px solid var(--border); border-radius:10px; padding:10px; margin-bottom:10px; background:rgba(0,0,0,0.22);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <strong style="color:var(--gold); font-size:13px;">第 ${i + 1} 幕 (${sc.id || 's' + (i + 1)})</strong>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-ghost" style="padding:2px 8px; font-size:11px;" onclick="seekTo(${(((parseFloat(sc.start||0)+parseFloat(sc.end||3))/2)).toFixed(2)})">预览</button>
+          <button class="btn-ghost" style="padding:2px 8px; font-size:11px; color:#FF9B85;" onclick="removeDynamicScene(${i})">删除</button>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>积木类型</label>
+          <select data-sc-idx="${i}" data-sc-k="type" style="width:100%;">
+            ${SCENE_TYPES.map(([k, lbl]) => `<option value="${k}" ${sc.type === k ? 'selected' : ''}>${lbl}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label>起止秒数（如 0.0 - 4.5）</label>
+          <div style="display:flex; gap:6px;">
+            <input type="text" data-sc-idx="${i}" data-sc-k="start" value="${sc.start ?? 0}" style="width:50%;" />
+            <input type="text" data-sc-idx="${i}" data-sc-k="end" value="${sc.end ?? 4}" style="width:50%;" />
+          </div>
+        </div>
+        <div class="field"><label>幕标 / 徽章</label><input type="text" data-sc-idx="${i}" data-sc-k="badge" value="${(sc.badge || '').replace(/"/g, '&quot;')}" /></div>
+        <div class="field"><label>主标题</label><input type="text" data-sc-idx="${i}" data-sc-k="title" value="${(sc.title || '').replace(/"/g, '&quot;')}" /></div>
+      </div>
+      <div class="field"><label>副标题 / 卖点说明</label><input type="text" data-sc-idx="${i}" data-sc-k="subtitle" value="${(sc.subtitle || '').replace(/"/g, '&quot;')}" /></div>
+      <div class="grid2">
+        <div class="field"><label>底部高亮标 / CTA</label><input type="text" data-sc-idx="${i}" data-sc-k="highlight" value="${(sc.highlight || '').replace(/"/g, '&quot;')}" /></div>
+        <div class="field"><label>配图路径（相对项目目录）</label><input type="text" data-sc-idx="${i}" data-sc-k="media" value="${(sc.media || '').replace(/"/g, '&quot;')}" /></div>
+      </div>
+      <div class="field"><label>本幕口播词（edge-tts）</label><input type="text" data-sc-idx="${i}" data-sc-k="vo_text" value="${(sc.vo_text || '').replace(/"/g, '&quot;')}" /></div>
+    </div>
+  `).join('');
+}
+
+function addDynamicScene() {
+  const cfg = collectConfig();
+  cfg.scenes = cfg.scenes || [];
+  const lastEnd = cfg.scenes.length ? parseFloat(cfg.scenes[cfg.scenes.length - 1].end || 0) : 0;
+  const idx = cfg.scenes.length + 1;
+  cfg.scenes.push({
+    id: `s${String(idx).padStart(2, '0')}`,
+    type: 'custom_card',
+    start: Number(lastEnd.toFixed(1)),
+    end: Number((lastEnd + 4.0).toFixed(1)),
+    badge: `SCENE ${String(idx).padStart(2, '0')}`,
+    title: `第 ${idx} 幕核心卖点`,
+    subtitle: '点击修改本幕说明文案',
+    highlight: '',
+    vo_text: '',
+    media: '',
+    items: [],
+  });
+  cfg.duration = Number((lastEnd + 4.0).toFixed(1));
+  currentCfg = cfg;
+  renderDynamicScenes(currentCfg);
+  syncTimelineUI(currentCfg);
+  saveConfig();
+}
+
+function removeDynamicScene(idx) {
+  const cfg = collectConfig();
+  if (!cfg.scenes || cfg.scenes.length <= 1) { toast('至少保留 1 幕'); return; }
+  cfg.scenes.splice(idx, 1);
+  cfg.duration = Math.max(...cfg.scenes.map(s => parseFloat(s.end || 4)));
+  currentCfg = cfg;
+  renderDynamicScenes(currentCfg);
+  syncTimelineUI(currentCfg);
+  saveConfig();
+}
+
+async function analyzeRefVideo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  toast(`正在拉片拆解参考视频 ${file.name}（提取关键帧与切点）...`);
+  const r = await fetch(`/api/projects/${encodeURIComponent(currentPid)}/analyze-ref?extract_audio=1`, {
+    method: 'POST', body: file
+  });
+  const d = await r.json();
+  input.value = '';
+  if (d.ok) {
+    currentCfg = d.config;
+    fillForm(currentCfg);
+    syncTimelineUI(currentCfg);
+    renderCompliance(d.compliance);
+    renderPrompts(d.prompts);
+    reloadFrame();
+    document.getElementById('ref-result').innerHTML = `
+      <div style="color:var(--mint); margin-bottom:6px;">✓ 拉片完成：${d.analysis.meta.duration}s (${d.analysis.meta.ratio}) → 自动拆出 ${d.analysis.scene_count} 幕骨架，并已提取参考底乐！</div>
+      <a href="${d.analysis.storyboard_url}" target="_blank" style="color:var(--gold);">↗ 查看参考视频关键帧拉片图</a>
+      <img src="${d.analysis.storyboard_url}" style="width:100%; border-radius:8px; margin-top:6px;" />
+    `;
+    toast(`参考视频拆解完成：已生成 ${d.analysis.scene_count} 幕骨架！`);
+  } else {
+    toast('参考视频拆解失败：' + (d.error || '未知错误'));
+  }
+}
+
 function fillForm(cfg) {
   const b = cfg.brand || {}, p = cfg.pain_points || {}, n = cfg.nutrients || {}, a = cfg.audio || {};
+  const catEl = document.getElementById('f-category');
+  if (catEl) catEl.value = cfg.category || 'blue_hat';
   const map = {
     product_name: b.product_name, category_tag: b.category_tag,
     product_name_line1: b.product_name_line1, product_name_line2: b.product_name_line2,
@@ -490,36 +653,60 @@ function fillForm(cfg) {
       <input type="text" data-vo-idx="${i}" value="${(ln.text || '').replace(/"/g, '&quot;')}" />
     </div>
   `).join('');
+  renderDynamicScenes(cfg);
 }
 
 function collectConfig() {
   const cfg = JSON.parse(JSON.stringify(currentCfg));
   const val = k => (document.getElementById('f-' + k) || {}).value || '';
+  cfg.category = val('category') || cfg.category || 'blue_hat';
+  cfg.brand = cfg.brand || {};
   Object.assign(cfg.brand, {
     product_name: val('product_name'), category_tag: val('category_tag'),
-    product_name_line1: val('product_name_line1'), product_name_line2: val('product_name_line2'),
-    approval_no: val('approval_no'), spec_pack: val('spec_pack'),
-    function_1: val('function_1'), function_2: val('function_2'),
-    finale_badge: val('finale_badge'), compliance_footer: val('compliance_footer'),
+    approval_no: val('approval_no'), compliance_footer: val('compliance_footer'),
   });
-  Object.assign(cfg.pain_points, {
-    hook_line1: val('hook_line1'), hook_line2: val('hook_line2'), hook_sub: val('hook_sub'),
-    pain1_tag: val('pain1_tag'), pain2_tag: val('pain2_tag'), pain3_title: val('pain3_title'),
-  });
-  Object.assign(cfg.nutrients, {
-    card1_pill: val('card1_pill'), card1_analogy: val('card1_analogy'),
-    card2_pill: val('card2_pill'), card2_analogy: val('card2_analogy'),
-    card3_pill: val('card3_pill'), card3_analogy: val('card3_analogy'),
-    card4_pill: val('card4_pill'), card4_analogy: val('card4_analogy'),
-  });
+  if (isDynamicCfg(cfg)) {
+    cfg.scenes = cfg.scenes || [];
+    document.querySelectorAll('[data-sc-idx]').forEach(el => {
+      const idx = parseInt(el.dataset.scIdx, 10);
+      const k = el.dataset.scK;
+      if (!cfg.scenes[idx]) return;
+      cfg.scenes[idx][k] = (k === 'start' || k === 'end') ? parseFloat(el.value || '0') : el.value;
+    });
+    if (cfg.scenes.length) {
+      cfg.duration = Math.max(1, ...cfg.scenes.map(s => parseFloat(s.end || 4)));
+    }
+    cfg.audio.vo_lines = cfg.scenes.filter(s => (s.vo_text || '').trim()).map(s => ({
+      id: s.id,
+      start: Number((parseFloat(s.start || 0) + 0.08).toFixed(2)),
+      max_dur: Number(Math.max(0.8, parseFloat(s.end || 4) - parseFloat(s.start || 0) - 0.18).toFixed(2)),
+      text: s.vo_text,
+    }));
+  } else {
+    Object.assign(cfg.brand, {
+      product_name_line1: val('product_name_line1'), product_name_line2: val('product_name_line2'),
+      spec_pack: val('spec_pack'), function_1: val('function_1'), function_2: val('function_2'),
+      finale_badge: val('finale_badge'),
+    });
+    Object.assign(cfg.pain_points, {
+      hook_line1: val('hook_line1'), hook_line2: val('hook_line2'), hook_sub: val('hook_sub'),
+      pain1_tag: val('pain1_tag'), pain2_tag: val('pain2_tag'), pain3_title: val('pain3_title'),
+    });
+    Object.assign(cfg.nutrients, {
+      card1_pill: val('card1_pill'), card1_analogy: val('card1_analogy'),
+      card2_pill: val('card2_pill'), card2_analogy: val('card2_analogy'),
+      card3_pill: val('card3_pill'), card3_analogy: val('card3_analogy'),
+      card4_pill: val('card4_pill'), card4_analogy: val('card4_analogy'),
+    });
+    document.querySelectorAll('[data-vo-idx]').forEach(inp => {
+      const idx = parseInt(inp.dataset.voIdx, 10);
+      if (cfg.audio.vo_lines[idx]) cfg.audio.vo_lines[idx].text = inp.value;
+    });
+  }
   cfg.audio.enable_bgm = document.getElementById('a-bgm').checked;
   cfg.audio.enable_sfx = document.getElementById('a-sfx').checked;
   cfg.audio.enable_vo = document.getElementById('a-vo').checked;
   cfg.audio.voice = document.getElementById('a-voice').value;
-  document.querySelectorAll('[data-vo-idx]').forEach(inp => {
-    const idx = parseInt(inp.dataset.voIdx, 10);
-    if (cfg.audio.vo_lines[idx]) cfg.audio.vo_lines[idx].text = inp.value;
-  });
   return cfg;
 }
 
@@ -530,23 +717,25 @@ async function saveConfig() {
   });
   const data = await r.json();
   currentCfg = cfg;
+  syncTimelineUI(cfg);
   renderCompliance(data.compliance);
   renderPrompts(data.prompts);
   const frame = document.getElementById('preview-frame');
-  if (frame.contentWindow) frame.contentWindow.postMessage({ type: 'applyConfig', config: cfg }, '*');
+  if (frame.contentWindow) frame.contentWindow.postMessage({ type: 'applyConfig', config: cfg, t: curTime }, '*');
   toast('配置已保存并同步到预览画布');
 }
 
 function renderCompliance(c) {
   const b = document.getElementById('comp-badge');
   const box = document.getElementById('comp-alerts');
+  const catLabel = c.category_label || '合规';
   if (c.passed) {
-    b.className = 'badge-ok'; b.textContent = '✓ 蓝帽合规通过';
+    b.className = 'badge-ok'; b.textContent = `✓ ${catLabel}合规通过`;
     box.style.display = 'none';
   } else {
-    b.className = 'badge-err'; b.textContent = `⚠ 发现 ${c.error_count} 处合规风险`;
+    b.className = 'badge-err'; b.textContent = `⚠ ${catLabel}发现 ${c.error_count} 处风险`;
     box.style.display = 'block';
-    box.innerHTML = `<h3 style="color:#FF8C7A;">合规校验提醒</h3>` +
+    box.innerHTML = `<h3 style="color:#FF8C7A;">合规校验提醒（${catLabel}）</h3>` +
       c.issues.map(i => `<div style="font-size:12px; color:#FFB3A7; margin-bottom:6px;">• ${i.message}</div>`).join('');
   }
 }
@@ -585,18 +774,20 @@ async function uploadAsset(target, input) {
 }
 
 async function createProject() {
-  const name = prompt('请输入新产品名称（如：汤臣倍健氨糖软骨素）');
+  const name = prompt('请输入新产品名称（如：XX 益生菌 / XX 精华液 / XX 咖啡）');
   if (!name) return;
-  const id = prompt('请输入英文项目目录 ID（如：byhealth-antang）', 'product-' + Date.now().toString().slice(-4));
+  const id = prompt('请输入英文项目目录 ID（如：my-product）', 'product-' + Date.now().toString().slice(-4));
   if (!id) return;
+  const category = prompt('请输入品类合规模式（general=通用电商 / blue_hat=蓝帽保健品 / food=普通食品 / skincare=护肤美妆）', 'general') || 'general';
   const r = await fetch('/api/projects', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, name })
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, name, category, mode: 'dynamic' })
   });
   const d = await r.json();
   if (d.ok) {
     currentPid = d.id;
     await initProjects();
-    toast('新产品项目已创建');
+    toast('已创建通用自由分镜项目（支持上传参考视频自动拆幕）');
   } else {
     toast(d.error || '创建失败');
   }

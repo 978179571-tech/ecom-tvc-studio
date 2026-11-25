@@ -12,8 +12,9 @@ import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from engine.audio_mixer import build_and_mux_audio
-from engine.compliance import check_compliance
+from engine.compliance import REQUIRED_BLUE_HAT_DISCLAIMER, check_compliance
 from engine.prompt_builder import build_prompt_pack
+from engine.ref_analyzer import analyze_reference_video
 from engine.renderer import extract_video_frames, render_preview_grid, render_video
 from engine.srt_sync import reset_scene_timings, sync_srt_to_config
 
@@ -72,11 +73,113 @@ def list_projects() -> list[dict]:
     return items
 
 
+def resolve_template_rel(pid: str, cfg: dict, ratio: str) -> str:
+    if cfg.get("template_mode") == "dynamic" or cfg.get("scenes"):
+        return f"/templates/dynamic_studio.html?project={urllib.parse.quote(pid)}&ratio={ratio}"
+    template = "tvc_9x16.html" if ratio == "9x16" else "tvc_16x9.html"
+    return f"/templates/{template}?project={urllib.parse.quote(pid)}"
+
+
+def create_project_dir(new_id: str, new_name: str, category: str = "general", mode: str = "dynamic") -> dict:
+    dst = project_path(new_id)
+    if os.path.exists(dst):
+        raise ValueError(f"项目 ID 已存在：{new_id}")
+    src_demo = project_path("sanjin-antang")
+    if mode == "sanjin_demo":
+        shutil.copytree(src_demo, dst, ignore=shutil.ignore_patterns("out"))
+        os.makedirs(os.path.join(dst, "out"), exist_ok=True)
+        cfg = load_project_config(new_id)
+        cfg["project_id"] = new_id
+        cfg["project_name"] = new_name
+        cfg["category"] = category
+        save_project_config(new_id, cfg)
+        return cfg
+
+    os.makedirs(os.path.join(dst, "out"), exist_ok=True)
+    os.makedirs(os.path.join(dst, "assets", "official"), exist_ok=True)
+    os.makedirs(os.path.join(dst, "assets", "media"), exist_ok=True)
+    if os.path.isdir(os.path.join(src_demo, "audio")):
+        shutil.copytree(os.path.join(src_demo, "audio"), os.path.join(dst, "audio"))
+
+    footer = REQUIRED_BLUE_HAT_DISCLAIMER if category == "blue_hat" else ""
+    cfg = {
+        "project_id": new_id,
+        "project_name": new_name,
+        "template_mode": "dynamic",
+        "category": category,
+        "duration": 24.0,
+        "fps": 24,
+        "brand": {
+            "brand_name": new_name.split()[0] if new_name else new_id,
+            "product_name": new_name,
+            "category_tag": "电商商业短视频",
+            "approval_no": "",
+            "function_1": "核心卖点 1",
+            "function_2": "核心卖点 2",
+            "compliance_footer": footer,
+        },
+        "scenes": [
+            {
+                "id": "s01", "type": "hero_hook", "start": 0.0, "end": 4.5,
+                "badge": "黄金 3 秒痛点", "title": f"为什么大家都选 {new_name}？",
+                "subtitle": "一句直击痛点的副标题（可上传参考视频自动重排分镜）",
+                "highlight": "真实场景痛点直击", "vo_text": "", "media": "", "items": [],
+            },
+            {
+                "id": "s02", "type": "data_hud", "start": 4.5, "end": 9.5,
+                "badge": "痛点根源解析", "title": "传统方案为什么总踩坑",
+                "subtitle": "用直观数据或机理对比讲清底层原因",
+                "highlight": "", "vo_text": "", "media": "",
+                "items": [
+                    {"label": "核心指标 A", "value": 88, "end_value": 45},
+                    {"label": "吸收利用率", "value": 80, "end_value": 36},
+                ],
+            },
+            {
+                "id": "s03", "type": "orbit_cards", "start": 9.5, "end": 15.0,
+                "badge": "核心成分 / 卖点", "title": "多重核心优势协同赋能",
+                "subtitle": "具象化类比，一眼看懂价值",
+                "highlight": "", "vo_text": "", "media": "",
+                "items": [
+                    {"title": "核心优势 1", "desc": "高标准原料配比"},
+                    {"title": "核心优势 2", "desc": "差异化专利/工艺"},
+                ],
+            },
+            {
+                "id": "s04", "type": "proof_spec", "start": 15.0, "end": 19.5,
+                "badge": "权威背书与规格", "title": "看得见的品质保障",
+                "subtitle": "支持官方原图展示，零 AI 篡改包装",
+                "highlight": "现货速发 · 安心之选", "vo_text": "", "media": "",
+                "items": [
+                    {"title": "官方正品权威认证"},
+                    {"title": "贴心规格 · 每日轻松坚持"},
+                ],
+            },
+            {
+                "id": "s05", "type": "brand_finale", "start": 19.5, "end": 24.0,
+                "badge": "品牌大牌落版", "title": new_name,
+                "subtitle": "点击了解详情，开启品质升级",
+                "highlight": "限时礼遇 · 立即入手", "vo_text": "", "media": "", "items": [],
+            },
+        ],
+        "audio": {
+            "enable_bgm": True,
+            "enable_sfx": True,
+            "enable_vo": False,
+            "voice": "zh-CN-YunyangNeural",
+            "bgm_gain": 0.46,
+            "sfx_scale": 1.0,
+            "vo_lines": [],
+        },
+    }
+    save_project_config(new_id, cfg)
+    return cfg
+
+
 def run_render_job(job_id: str, pid: str, ratio: str):
     pdir = project_path(pid)
     cfg = load_project_config(pid)
-    template = "tvc_9x16.html" if ratio == "9x16" else "tvc_16x9.html"
-    scene_url = f"http://{HOST}:{PORT}/templates/{template}?project={urllib.parse.quote(pid)}"
+    scene_url = f"http://{HOST}:{PORT}{resolve_template_rel(pid, cfg, ratio)}"
     out_dir = os.path.join(pdir, "out")
     os.makedirs(out_dir, exist_ok=True)
     ts = time.strftime("%Y%m%d_%H%M%S")
@@ -225,17 +328,47 @@ class StudioHandler(BaseHTTPRequestHandler):
             body = json.loads(self._read_body().decode("utf-8"))
             new_id = safe_id(body.get("id", f"proj-{int(time.time())}"))
             new_name = body.get("name", new_id)
-            dst = project_path(new_id)
-            if os.path.exists(dst):
-                return self._send_json({"error": "项目 ID 已存在"}, 400)
-            src_demo = project_path("sanjin-antang")
-            shutil.copytree(src_demo, dst, ignore=shutil.ignore_patterns("out"))
-            os.makedirs(os.path.join(dst, "out"), exist_ok=True)
-            cfg = load_project_config(new_id)
-            cfg["project_id"] = new_id
-            cfg["project_name"] = new_name
-            save_project_config(new_id, cfg)
+            category = body.get("category", "general")
+            mode = body.get("mode", "dynamic")
+            try:
+                create_project_dir(new_id, new_name, category=category, mode=mode)
+            except ValueError as exc:
+                return self._send_json({"error": str(exc)}, 400)
             return self._send_json({"ok": True, "id": new_id})
+
+        m = re.match(r"^/api/projects/([^/]+)/analyze-ref$", path)
+        if m:
+            pid = safe_id(m.group(1))
+            pdir = project_path(pid)
+            raw = self._read_body()
+            ref_dir = os.path.join(pdir, "out", "_ref")
+            os.makedirs(ref_dir, exist_ok=True)
+            ref_mp4 = os.path.join(ref_dir, "reference.mp4")
+            with open(ref_mp4, "wb") as f:
+                f.write(raw)
+            extract_bgm = (qs.get("extract_audio") or ["1"])[0] == "1"
+            bgm_dst = os.path.join(pdir, "audio", "bgm_ref.wav") if extract_bgm else None
+            try:
+                analysis = analyze_reference_video(ref_mp4, ref_dir, extract_audio_path=bgm_dst)
+                cfg = load_project_config(pid)
+                cfg["template_mode"] = "dynamic"
+                cfg["duration"] = analysis["meta"]["duration"]
+                cfg["scenes"] = analysis["suggested_scenes"]
+                save_project_config(pid, cfg)
+                return self._send_json({
+                    "ok": True,
+                    "config": cfg,
+                    "analysis": {
+                        "meta": analysis["meta"],
+                        "scene_count": analysis["scene_count"],
+                        "cuts": analysis["cuts"],
+                        "storyboard_url": f"/projects/{urllib.parse.quote(pid)}/out/_ref/ref_storyboard.jpg?ts={int(time.time())}",
+                    },
+                    "compliance": check_compliance(cfg),
+                    "prompts": build_prompt_pack(cfg),
+                })
+            except Exception as exc:
+                return self._send_json({"error": str(exc)}, 400)
 
         m = re.match(r"^/api/projects/([^/]+)/upload$", path)
         if m:
@@ -296,10 +429,10 @@ class StudioHandler(BaseHTTPRequestHandler):
         if m:
             pid = safe_id(m.group(1))
             ratio = (qs.get("ratio") or ["9x16"])[0]
-            template = "tvc_9x16.html" if ratio == "9x16" else "tvc_16x9.html"
-            scene_url = f"http://{HOST}:{PORT}/templates/{template}?project={urllib.parse.quote(pid)}"
+            cfg = load_project_config(pid)
+            scene_url = f"http://{HOST}:{PORT}{resolve_template_rel(pid, cfg, ratio)}"
             out_jpg = os.path.join(project_path(pid), "out", f"preview_{ratio}.jpg")
-            render_preview_grid(scene_url, out_jpg, ratio=ratio)
+            render_preview_grid(scene_url, out_jpg, ratio=ratio, scenes=cfg.get("scenes"))
             return self._send_json({
                 "ok": True,
                 "preview_url": f"/projects/{urllib.parse.quote(pid)}/out/preview_{ratio}.jpg?ts={int(time.time())}",
