@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<script>
+(function(){
+  const p = new URLSearchParams(location.search).get('project') || 'sanjin-antang';
+  const b = document.createElement('base');
+  b.href = '/projects/' + encodeURIComponent(p) + '/';
+  document.head.appendChild(b);
+})();
+</script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920, initial-scale=1.0" />
+<title>三金® GOP®氨糖软骨素葛根胶囊 v7 竖屏 9:16 终版</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1080px; height: 1920px; overflow: hidden;
+    background: #091F1A;
+    font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .serif {
+    font-family: "Source Han Serif CN", "Noto Serif SC", "Songti SC", "SimSun", serif;
+  }
+  #stage {
+    position: relative; width: 1080px; height: 1920px; overflow: hidden;
+    background: #091F1A;
+  }
+  .scene {
+    position: absolute; inset: 0; width: 1080px; height: 1920px;
+    overflow: hidden;
+    will-change: transform, opacity, clip-path;
+  }
+  .mask-line { overflow: hidden; display: block; }
+  .mask-inner { display: inline-block; will-change: transform, opacity; }
+
+  #film-vignette {
+    position: absolute; inset: 0; z-index: 95; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 50%, transparent 58%, rgba(6, 18, 15, 0.34) 100%);
+  }
+  #lens-sweep {
+    position: absolute; top: -15%; left: -45%; width: 420px; height: 130%;
+    z-index: 91; pointer-events: none; opacity: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 232, 168, 0.06) 35%, rgba(255, 244, 210, 0.22) 50%, rgba(255, 232, 168, 0.06) 65%, transparent 100%);
+    transform: rotate(16deg);
+    mix-blend-mode: screen;
+  }
+  #motes-layer { position: absolute; inset: 0; z-index: 86; pointer-events: none; }
+  #prog-track {
+    position: absolute; top: 0; left: 0; right: 0; height: 5px;
+    background: rgba(255,255,255,0.08); z-index: 98;
+  }
+  #prog-bar {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #C99A3B, #FFE28A);
+    box-shadow: 0 0 12px rgba(255, 226, 138, 0.8);
+  }
+  #bar-top, #bar-bot {
+    position: absolute; left: 0; right: 0; height: 96px;
+    background: #061410; z-index: 92; pointer-events: none;
+    will-change: transform;
+  }
+  #bar-top { top: 0; }
+  #bar-bot { bottom: 0; }
+
+  #topbar {
+    position: absolute; top: 40px; left: 44px; right: 44px; height: 48px;
+    display: flex; align-items: center; justify-content: space-between;
+    z-index: 88; opacity: 0;
+  }
+  .tb-brand {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 24px; font-weight: 700; letter-spacing: 0.06em;
+  }
+  .tb-chap {
+    font-size: 22px; font-weight: 700; letter-spacing: 0.12em;
+    padding: 7px 18px; border-radius: 4px;
+    border-left: 4px solid #D9AC4A;
+  }
+
+  .pill-gold {
+    position: relative; overflow: hidden; display: inline-block;
+    background: linear-gradient(135deg, #DFB352 0%, #B38122 100%);
+    color: #FFFFFF; font-weight: 800; border-radius: 999px;
+    padding: 10px 28px; font-size: 28px; letter-spacing: 0.05em;
+    box-shadow: 0 12px 28px rgba(179, 129, 34, 0.36);
+  }
+  .pill-dark {
+    display: inline-block;
+    background: linear-gradient(135deg, #165448 0%, #0E3830 100%);
+    color: #FFFFFF; font-weight: 800; border-radius: 999px;
+    padding: 10px 28px; font-size: 28px; letter-spacing: 0.05em;
+    box-shadow: 0 12px 28px rgba(14, 56, 48, 0.30);
+  }
+  .real-shadow { filter: drop-shadow(0 26px 38px rgba(12, 24, 20, 0.38)); }
+  .sheen {
+    position: absolute; top: 0; bottom: 0; width: 120px; left: -140px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.42), transparent);
+    transform: skewX(-22deg); pointer-events: none;
+  }
+
+  /* 3D Glass Translucent Ingredient Orb */
+  .glass-orb {
+    position: absolute;
+    width: 136px; height: 136px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.92) 0%, rgba(255,244,214,0.48) 28%, rgba(220,185,110,0.22) 68%, rgba(255,232,168,0.52) 100%);
+    border: 2.5px solid rgba(255, 240, 196, 0.85);
+    box-shadow:
+      inset 0 10px 20px rgba(255,255,255,0.82),
+      inset 0 -12px 22px rgba(196, 148, 52, 0.42),
+      0 16px 32px rgba(0, 18, 14, 0.45),
+      0 0 24px rgba(246, 215, 130, 0.42);
+    display: flex; align-items: center; justify-content: center;
+    transform: translate(-50%, -50%);
+    will-change: left, top, transform, opacity;
+  }
+  .glass-orb img {
+    width: 88px; height: 88px; object-fit: contain;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.22));
+  }
+  .orb-label {
+    position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%);
+    white-space: nowrap;
+    background: rgba(10, 40, 34, 0.92);
+    border: 1.5px solid rgba(246, 215, 130, 0.72);
+    color: #FFE49A; font-size: 22px; font-weight: 900;
+    padding: 3px 14px; border-radius: 999px;
+  }
+  .v-card {
+    width: 504px;
+    background: rgba(9, 36, 30, 0.82);
+    border: 2px solid rgba(246, 215, 130, 0.56);
+    border-radius: 24px;
+    padding: 28px 22px;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.40);
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="prog-track"><div id="prog-bar"></div></div>
+  <div id="bar-top"></div>
+  <div id="bar-bot"></div>
+  <div id="motes-layer"></div>
+  <div id="lens-sweep"></div>
+  <div id="film-vignette"></div>
+
+  <div id="topbar">
+    <div class="tb-brand" id="tb-brand">
+      <img src="assets/official/sanjin_logo.png" style="height:34px; width:auto;" />
+      <span style="width:2px; height:22px; background:#D9AC4A;"></span>
+      <span>GOP®氨糖软骨素葛根胶囊</span>
+    </div>
+    <div class="tb-chap" id="tb-chap">02 原因解析</div>
+  </div>
+
+  <!-- ==================== S1: 痛点1 上下楼梯关节疼、腿疼 (0.00 - 3.90s, 9:16 竖屏) ==================== -->
+  <div id="s1" class="scene" style="z-index:20;">
+    <img id="s1-bg" src="assets/v5/frames_02/f_0001.jpg"
+         style="position:absolute; inset:0; width:1080px; height:1920px; object-fit:cover; object-position:56% 50%; transform-origin:54% 62%;" />
+    <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(8,26,21,0.90) 0%, rgba(8,26,21,0.45) 32%, transparent 55%, rgba(8,26,21,0.86) 100%);"></div>
+
+    <svg id="s1-fx" width="1080" height="1920" style="position:absolute; inset:0;">
+      <defs>
+        <radialGradient id="painGrad">
+          <stop offset="0%" stop-color="rgba(255,96,74,0.65)" />
+          <stop offset="65%" stop-color="rgba(255,96,74,0.18)" />
+          <stop offset="100%" stop-color="rgba(255,96,74,0)" />
+        </radialGradient>
+      </defs>
+      <circle id="s1-glow" cx="635" cy="1190" r="100" fill="url(#painGrad)" />
+      <circle id="s1-r1" cx="635" cy="1190" r="52" fill="none" stroke="#FF6B57" stroke-width="5" />
+      <circle id="s1-r2" cx="635" cy="1190" r="90" fill="none" stroke="#FFE066" stroke-width="3" stroke-dasharray="12 8" />
+    </svg>
+
+    <div style="position:absolute; left:64px; right:64px; top:165px; text-align:center;">
+      <div id="s1-kicker" style="display:inline-flex; align-items:center; gap:16px; margin-bottom:24px;">
+        <img src="assets/official/sanjin_logo.png" style="height:48px; width:auto;" />
+        <span style="width:2px; height:26px; background:#FFE066;"></span>
+        <span style="font-size:32px; font-weight:700; color:#FFE066; letter-spacing:0.12em;">中老年骨骼关节养护</span>
+      </div>
+      <div class="serif" style="font-size:100px; font-weight:900; color:#FFFFFF; line-height:1.18; text-shadow:0 12px 34px rgba(0,0,0,0.5);">
+        <span class="mask-line"><span id="s1-l1" class="mask-inner">上楼<span style="color:#FFE066;">腰疼、腿疼</span></span></span>
+        <span class="mask-line"><span id="s1-l2" class="mask-inner" style="color:#FFE066;">腿抽筋？</span></span>
+      </div>
+      <div id="s1-rule" style="width:0px; height:5px; background:linear-gradient(90deg, transparent, #FFE066, transparent); margin:26px auto 22px;"></div>
+      <div class="mask-line">
+        <span id="s1-sub" class="mask-inner" style="font-size:52px; font-weight:900; color:#FFFFFF; text-shadow:0 6px 18px rgba(0,0,0,0.65); letter-spacing:0.05em;">
+          45岁后，<span style="color:#FFE066;">只补钙远远不够</span>
+        </span>
+      </div>
+    </div>
+
+    <div id="s1-tag" style="position:absolute; left:50%; bottom:195px; transform:translateX(-50%); white-space:nowrap; background:linear-gradient(135deg, #EE3E2B, #B81E10); color:#FFF; font-size:54px; font-weight:900; padding:20px 50px; border-radius:14px; letter-spacing:0.06em; border:1.5px solid rgba(255,210,160,0.5); box-shadow:0 16px 36px rgba(0,0,0,0.45);">
+      上下楼梯关节疼、腿疼
+    </div>
+  </div>
+
+  <!-- ==================== S2A: 痛点2 腰疼直不起来 (3.70 - 7.60s, 9:16 竖屏) ==================== -->
+  <div id="s2a" class="scene" style="z-index:22; opacity:0;">
+    <img id="s2a-bg" src="assets/v5/frames_01/f_0001.jpg"
+         style="position:absolute; inset:0; width:1080px; height:1920px; object-fit:cover; object-position:50% 50%; transform-origin:50% 60%;" />
+    <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(8,26,21,0.90) 0%, rgba(8,26,21,0.44) 34%, transparent 58%, rgba(8,26,21,0.88) 100%);"></div>
+
+    <svg id="s2a-fx" width="1080" height="1920" style="position:absolute; inset:0;">
+      <circle id="s2a-glow" cx="445" cy="1175" r="100" fill="url(#painGrad)" />
+      <circle id="s2a-r1" cx="445" cy="1175" r="52" fill="none" stroke="#FF6B57" stroke-width="5" />
+      <circle id="s2a-r2" cx="445" cy="1175" r="90" fill="none" stroke="#FFE066" stroke-width="3" stroke-dasharray="12 8" />
+    </svg>
+
+    <div id="s2a-copy" style="position:absolute; left:54px; right:54px; top:165px; text-align:center;">
+      <div id="s2a-h1" class="serif" style="font-size:84px; font-weight:900; color:#FFFFFF; line-height:1.22; text-shadow:0 10px 28px rgba(0,0,0,0.45);">
+        年龄越大<br><span style="color:#FFE066;">骨量与氨糖流失越快</span>
+      </div>
+      <div id="s2a-agebox" style="position:relative; overflow:hidden; margin-top:32px; display:inline-flex; align-items:baseline; gap:14px; background:rgba(12,50,42,0.88); border:2px solid rgba(246,215,130,0.72); border-radius:16px; padding:18px 46px; box-shadow:0 18px 40px rgba(0,0,0,0.35);">
+        <div id="s2a-sheen" class="sheen"></div>
+        <span style="font-size:38px; color:rgba(255,255,255,0.92); font-weight:700;">步入</span>
+        <span id="s2a-age" class="serif" style="font-size:126px; font-weight:900; color:#FFE066; line-height:1;">45</span>
+        <span style="font-size:44px; color:#FFFFFF; font-weight:800;">岁</span>
+      </div>
+    </div>
+
+    <div id="s2a-tag" style="position:absolute; left:50%; bottom:195px; transform:translateX(-50%); white-space:nowrap; background:linear-gradient(135deg, #EE3E2B, #B81E10); color:#FFF; font-size:58px; font-weight:900; padding:20px 56px; border-radius:14px; letter-spacing:0.06em; border:1.5px solid rgba(255,210,160,0.5); box-shadow:0 16px 36px rgba(0,0,0,0.45);">
+      腰疼直不起来
+    </div>
+  </div>
+
+  <!-- ==================== S2B: 痛点3 夜间腿脚经常抽筋 (7.40 - 11.30s, 9:16 竖屏) ==================== -->
+  <div id="s2b" class="scene" style="z-index:24; opacity:0; background:#091F1A;">
+    <div id="s2b-zoom" style="position:absolute; inset:0; transform-origin:380px 1520px;">
+      <img id="s2b-bg" src="assets/v5/frames_03/f_0001.jpg"
+           style="position:absolute; inset:0; width:1080px; height:1920px; object-fit:cover; object-position:52% 50%;" />
+      <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(8,26,21,0.90) 0%, rgba(8,26,21,0.38) 32%, transparent 56%, rgba(8,26,21,0.84) 100%);"></div>
+
+      <svg id="s2b-fx" width="1080" height="1920" style="position:absolute; inset:0;">
+        <circle id="s2b-glow" cx="380" cy="1540" r="106" fill="url(#painGrad)" />
+        <circle id="s2b-r1" cx="380" cy="1540" r="56" fill="none" stroke="#FF6B57" stroke-width="5.5" />
+        <circle id="s2b-r2" cx="380" cy="1540" r="96" fill="none" stroke="#FFE066" stroke-width="3.5" stroke-dasharray="12 8" />
+      </svg>
+
+      <div id="s2b-copy" style="position:absolute; left:54px; right:54px; top:165px; text-align:center;">
+        <div id="s2b-b1" style="display:inline-block; background:linear-gradient(135deg, #EE3E2B, #B81E10); color:#FFF; font-size:46px; font-weight:900; padding:14px 42px; border-radius:10px; margin-bottom:26px; border:1px solid rgba(255,210,160,0.45);">
+          夜间痛点警报
+        </div>
+        <div id="s2b-h1" class="serif" style="font-size:100px; font-weight:900; color:#FFE066; line-height:1.18; text-shadow:0 12px 30px rgba(0,0,0,0.5);">
+          夜间腿脚经常抽筋
+        </div>
+        <div id="s2b-sub" style="font-size:50px; color:#FFFFFF; text-shadow:0 6px 18px rgba(0,0,0,0.65); font-weight:800; margin-top:20px;">
+          骨量与氨糖流失的信号
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== S3: 竖屏 3D 全息 X 光透视 + 双环形仪表盘 (11.10 - 15.30s) ==================== -->
+  <div id="s3" class="scene" style="z-index:28; opacity:0; background:radial-gradient(circle at 50% 36%, #175B4E 0%, #09241E 74%);">
+    <div style="position:absolute; inset:0; opacity:0.12; background-image:linear-gradient(rgba(140,228,198,0.45) 1px, transparent 1px), linear-gradient(90deg, rgba(140,228,198,0.45) 1px, transparent 1px); background-size:64px 64px;"></div>
+
+    <div id="s3-title" class="serif" style="position:absolute; top:140px; width:100%; text-align:center; font-size:88px; font-weight:900; color:#FFFFFF;">
+      骨量流失 · <span style="color:#FFE066;">软骨磨损</span>
+    </div>
+
+    <img id="s3-xray" src="assets/cutouts/05_knee_xray.png"
+         style="position:absolute; left:540px; top:640px; width:720px; height:720px; transform:translate(-50%,-50%); filter:drop-shadow(0 0 28px rgba(140,228,198,0.28));" />
+    <svg id="s3-ret1" width="540" height="540" style="position:absolute; left:270px; top:370px; opacity:0.7;">
+      <circle cx="270" cy="270" r="230" fill="none" stroke="#FFE066" stroke-width="2" stroke-dasharray="22 14" />
+    </svg>
+    <svg id="s3-ret2" width="400" height="400" style="position:absolute; left:340px; top:440px; opacity:0.65;">
+      <circle cx="200" cy="200" r="155" fill="none" stroke="#8CE4C6" stroke-width="2.5" stroke-dasharray="10 12" />
+    </svg>
+    <div id="s3-beam" style="position:absolute; left:180px; top:640px; width:720px; height:64px; transform:translateY(-50%); background:linear-gradient(180deg, transparent 0%, rgba(246,215,130,0.24) 46%, #FFF8DE 50%, rgba(246,215,130,0.24) 54%, transparent 100%);"></div>
+
+    <!-- Bottom Dual Giant Circular Gauges + Bone Macro -->
+    <div id="s3-bot" style="position:absolute; left:50px; right:50px; top:1055px; display:flex; flex-direction:column; align-items:center; gap:44px;">
+      <div style="display:flex; justify-content:center; gap:90px;">
+        <div id="s3-card1" style="display:flex; flex-direction:column; align-items:center;">
+          <div style="position:relative; width:300px; height:300px;">
+            <svg width="300" height="300" viewBox="0 0 280 280" style="transform:rotate(-90deg); filter:drop-shadow(0 0 14px rgba(246,215,130,0.45));">
+              <circle cx="140" cy="140" r="112" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="22" />
+              <circle id="s3-g1" cx="140" cy="140" r="112" fill="none" stroke="#FFE066" stroke-width="22" stroke-linecap="round" stroke-dasharray="703.7" stroke-dashoffset="105" />
+            </svg>
+            <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+              <div id="s3-p1" class="serif" style="font-size:96px; font-weight:900; color:#FFE066; line-height:1;">85%</div>
+              <div style="font-size:32px; color:rgba(255,255,255,0.92); margin-top:8px; font-weight:800;">持续下降</div>
+            </div>
+          </div>
+          <div style="font-size:56px; font-weight:900; color:#FFFFFF; margin-top:18px;">骨密度</div>
+        </div>
+
+        <div id="s3-card2" style="display:flex; flex-direction:column; align-items:center;">
+          <div style="position:relative; width:300px; height:300px;">
+            <svg width="300" height="300" viewBox="0 0 280 280" style="transform:rotate(-90deg); filter:drop-shadow(0 0 14px rgba(140,228,198,0.45));">
+              <circle cx="140" cy="140" r="112" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="22" />
+              <circle id="s3-g2" cx="140" cy="140" r="112" fill="none" stroke="#8CE4C6" stroke-width="22" stroke-linecap="round" stroke-dasharray="703.7" stroke-dashoffset="126" />
+            </svg>
+            <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+              <div id="s3-p2" class="serif" style="font-size:96px; font-weight:900; color:#7FFFD4; line-height:1;">82%</div>
+              <div style="font-size:32px; color:rgba(255,255,255,0.92); margin-top:8px; font-weight:800;">加速减少</div>
+            </div>
+          </div>
+          <div style="font-size:56px; font-weight:900; color:#FFFFFF; margin-top:18px;">关节氨糖</div>
+        </div>
+      </div>
+
+      <div id="s3-sum" style="display:flex; align-items:center; gap:34px; background:rgba(255,255,255,0.06); border:1.5px solid rgba(246,215,130,0.45); border-radius:999px; padding:18px 46px 18px 22px;">
+        <div style="width:150px; height:150px; border-radius:50%; border:4px solid #FFE066; overflow:hidden; flex-shrink:0;">
+          <img src="assets/cutouts/06_bone_trabeculae.png" style="width:100%; height:100%; object-fit:cover;" />
+        </div>
+        <div style="font-size:46px; font-weight:900; color:#FFFFFF; line-height:1.32;">
+          骨骼与关节软骨<br><span style="color:#FFE066;">需同步科学补充</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== S4: 竖屏上下斜切金刃 · 纯白无字瓶装单钙 (15.10 - 18.50s) ==================== -->
+  <div id="s4" class="scene" style="z-index:30; opacity:0; background:#F6F1E8;">
+    <div style="position:absolute; inset:0; background:linear-gradient(165deg, #16493E 0%, #0C2E27 100%); clip-path:polygon(0 0, 100% 0, 100% 48%, 0 56%);"></div>
+    <svg width="1080" height="1920" style="position:absolute; inset:0; z-index:3; pointer-events:none;">
+      <line id="s4-blade" x1="0" y1="1075" x2="1080" y2="921" stroke="#FFE066" stroke-width="6" stroke-dasharray="1200" stroke-dashoffset="1200" style="filter:drop-shadow(0 0 12px #FFE066);" />
+    </svg>
+
+    <div class="serif" style="position:absolute; top:145px; width:100%; text-align:center; font-size:92px; font-weight:900; color:#FFFFFF; z-index:4;">
+      只补单钙，<span style="color:#FFE066;">远远不够</span>
+    </div>
+
+    <div id="s4-l" style="position:absolute; left:72px; right:72px; top:315px; text-align:center; z-index:4;">
+      <div style="font-size:78px; font-weight:900; color:#FFE066;">缺软骨营养</div>
+      <div style="font-size:52px; color:#FFFFFF; font-weight:900; margin-top:14px;">单补钙，补不到关节软骨</div>
+    </div>
+
+    <img id="s4-bottle" src="assets/v7/blank_white_bottle.png" class="real-shadow"
+         style="position:absolute; left:50%; top:585px; height:670px; width:auto; transform:translateX(-50%); z-index:5;" />
+
+    <div id="s4-r" style="position:absolute; left:72px; right:72px; top:1360px; text-align:center; z-index:4;">
+      <div style="font-size:78px; font-weight:900; color:#0B3B31;">缺 VD3 促吸收</div>
+      <div style="width:180px; height:5px; background:#C99A3B; margin:20px auto;"></div>
+      <div style="font-size:52px; color:#183C34; font-weight:900;">吸收慢，更缺特色葛根素</div>
+    </div>
+  </div>
+
+  <!-- ==================== S5 (9:16 竖屏五重营养赋能): 上半关节环绕注入屈伸 + 下半食材类比双卡 (18.30 - 34.50s) ==================== -->
+  <div id="s5" class="scene" style="z-index:34; opacity:0; background:radial-gradient(circle at 50% 38%, #1C6254 0%, #0D3A32 48%, #071E1A 100%);">
+    <div id="s5-title" class="serif" style="position:absolute; top:132px; left:24px; right:24px; text-align:center; font-size:66px; font-weight:900; color:#FFFFFF; z-index:20; white-space:nowrap; text-shadow:0 10px 28px rgba(0,0,0,0.45);">
+      五重营养环绕 · <span style="color:#FFE066;">氨糖软骨素 + 钙</span>
+    </div>
+
+    <!-- Luminous Absorption Aura & Shockwave -->
+    <div id="s5-aura" style="position:absolute; left:540px; top:660px; width:560px; height:560px; transform:translate(-50%,-50%); border-radius:50%; background:radial-gradient(circle, rgba(255,226,138,0.45) 0%, rgba(140,228,198,0.18) 45%, transparent 72%); opacity:0.55;"></div>
+    <div id="s5-wave" style="position:absolute; left:540px; top:660px; width:160px; height:160px; transform:translate(-50%,-50%) scale(0.5); border-radius:50%; border:6px solid #FFE28A; box-shadow:0 0 36px #FFE066; opacity:0;"></div>
+
+    <!-- Back Golden Halo Ring -->
+    <svg id="s5-ring-back" width="1080" height="1920" style="position:absolute; inset:0; z-index:8; pointer-events:none;">
+      <defs>
+        <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="rgba(255,226,138,0.15)" />
+          <stop offset="50%" stop-color="#FFF5D1" />
+          <stop offset="100%" stop-color="rgba(255,226,138,0.15)" />
+        </linearGradient>
+      </defs>
+      <path d="M 250 660 A 290 72 0 0 1 830 660" fill="none" stroke="rgba(246,215,130,0.45)" stroke-width="8" />
+    </svg>
+
+    <!-- ARTICULATING 3D KNEE JOINT -->
+    <div id="s5-joint-wrap" style="position:absolute; left:540px; top:660px; width:460px; height:590px; transform:translate(-50%,-50%); z-index:10;">
+      <img id="s5-j-up" src="assets/v7/joint_upper.png"
+           style="position:absolute; inset:0; width:460px; height:590px; object-fit:contain; transform-origin:50% 51%; filter:drop-shadow(0 0 24px rgba(255,232,168,0.35));" />
+      <img id="s5-j-lo" src="assets/v7/joint_lower.png"
+           style="position:absolute; inset:0; width:460px; height:590px; object-fit:contain; transform-origin:50% 51%; filter:drop-shadow(0 0 24px rgba(140,228,198,0.32));" />
+    </div>
+
+    <!-- Front Golden Halo Ring -->
+    <svg id="s5-ring-front" width="1080" height="1920" style="position:absolute; inset:0; z-index:12; pointer-events:none;">
+      <path d="M 250 660 A 290 72 0 0 0 830 660" fill="none" stroke="url(#ringGrad)" stroke-width="10" stroke-linecap="round" style="filter:drop-shadow(0 0 18px #FFE28A);" />
+      <path d="M 280 660 A 260 58 0 0 0 800 660" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="3" stroke-dasharray="16 12" />
+    </svg>
+
+    <!-- 5 Translucent 3D Glass Orbs -->
+    <div id="orb-1" class="glass-orb" style="z-index:15;">
+      <img src="assets/cutouts/19_food_shark_cartilage.png" />
+      <div class="orb-label">氨糖 + 软骨素</div>
+    </div>
+    <div id="orb-2" class="glass-orb" style="z-index:15;">
+      <img src="assets/cutouts/10_ing_calcium.png" />
+      <div class="orb-label">钙 8g/100g</div>
+    </div>
+    <div id="orb-3" class="glass-orb" style="z-index:15;">
+      <img src="assets/cutouts/12_ing_vitamind3.png" />
+      <div class="orb-label">维生素D3</div>
+    </div>
+    <div id="orb-4" class="glass-orb" style="z-index:15;">
+      <img src="assets/cutouts/11_ing_puerarin.png" />
+      <div class="orb-label">★ 葛根素</div>
+    </div>
+    <div id="orb-5" class="glass-orb" style="z-index:15;">
+      <img src="assets/cutouts/06_bone_trabeculae.png" style="border-radius:50%;" />
+      <div class="orb-label">夯实骨量</div>
+    </div>
+
+    <!-- Phase 1 Bottom Two Side-by-Side Food Analogy Cards (18.30 - 23.20s) -->
+    <div id="p1-row" style="position:absolute; left:26px; right:26px; top:1105px; display:flex; justify-content:space-between; z-index:18; opacity:1;">
+      <div id="p1-c1" class="v-card" style="opacity:0;">
+        <div class="pill-gold" style="font-size:27px; padding:9px 20px; margin-bottom:20px;">氨糖432mg + 软骨素324mg</div>
+        <div style="width:200px; height:200px; border-radius:50%; background:#FAF4E6; border:3px solid #FFE066; display:flex; align-items:center; justify-content:center; margin-bottom:22px;">
+          <img src="assets/cutouts/19_food_shark_cartilage.png" style="width:166px; height:166px; object-fit:contain;" />
+        </div>
+        <div class="serif" style="font-size:44px; font-weight:900; color:#FFE066; white-space:nowrap;">≈ 约 10g 深海鲨鱼软骨</div>
+        <div style="font-size:36px; color:#FFFFFF; font-weight:900; margin-top:14px;">润泽养护关节软骨</div>
+      </div>
+
+      <div id="p1-c2" class="v-card" style="border-color:rgba(140,228,198,0.62); opacity:0;">
+        <div class="pill-dark" style="font-size:28px; padding:9px 24px; margin-bottom:20px; border:1.5px solid #8CE4C6;">每日6粒 含钙 192mg</div>
+        <div style="width:200px; height:200px; border-radius:50%; background:#FAF4E6; border:3px solid #8CE4C6; display:flex; align-items:center; justify-content:center; margin-bottom:22px;">
+          <img src="assets/cutouts/10_ing_calcium.png" style="width:162px; height:162px; object-fit:contain;" />
+        </div>
+        <div class="serif" style="font-size:48px; font-weight:900; color:#FFFFFF; white-space:nowrap;">≈ 约 1 大杯鲜牛奶</div>
+        <div style="font-size:36px; color:#7FFFD4; font-weight:900; margin-top:14px;">夯实致密骨量基础</div>
+      </div>
+    </div>
+
+    <!-- Phase 2 Bottom Two Side-by-Side Food Analogy Cards (23.00 - 28.20s) -->
+    <div id="p2-row" style="position:absolute; left:26px; right:26px; top:1105px; display:flex; justify-content:space-between; z-index:18; opacity:1;">
+      <div id="p2-c1" class="v-card" style="opacity:0;">
+        <div class="pill-gold" style="font-size:28px; padding:9px 24px; margin-bottom:20px;">维生素D3 70μg/100g</div>
+        <div style="width:200px; height:200px; border-radius:50%; background:#FAF4E6; border:3px solid #FFE066; display:flex; align-items:center; justify-content:center; margin-bottom:22px;">
+          <img src="assets/cutouts/16_food_eggyolk.png" style="width:166px; height:166px; object-fit:contain;" />
+        </div>
+        <div class="serif" style="font-size:46px; font-weight:900; color:#FFE066; white-space:nowrap;">≈ 约 2 个新鲜鸡蛋黄</div>
+        <div style="font-size:36px; color:#FFFFFF; font-weight:900; margin-top:14px;">协同促进钙吸收</div>
+      </div>
+
+      <div id="p2-c2" class="v-card" style="border-color:#FFE066; opacity:0;">
+        <div class="pill-gold" style="font-size:27px; padding:9px 22px; margin-bottom:20px;">★ 特别添加 葛根素 0.55g</div>
+        <div style="width:200px; height:200px; border-radius:50%; background:#FAF4E6; border:3px solid #FFE066; display:flex; align-items:center; justify-content:center; margin-bottom:22px;">
+          <img src="assets/cutouts/11_ing_puerarin.png" style="width:166px; height:166px; object-fit:contain;" />
+        </div>
+        <div class="serif" style="font-size:46px; font-weight:900; color:#FFFFFF; white-space:nowrap;">≈ 约 1 碗鲜炖葛根</div>
+        <div style="font-size:36px; color:#FFE066; font-weight:900; margin-top:14px;">东方草本 · 区别普通氨糖</div>
+      </div>
+    </div>
+
+    <!-- Phase 3 Bottom Celebration Pill -->
+    <div id="p3-banner" style="position:absolute; bottom:210px; left:50%; transform:translateX(-50%); z-index:20; opacity:0; text-align:center; white-space:nowrap;">
+      <div class="pill-gold" style="font-size:52px; padding:20px 56px; box-shadow:0 18px 46px rgba(0,0,0,0.45);">
+        五重营养协同注入 · 护骨更护膝
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== S6: 竖屏双区 · 国家蓝帽双效 × 0.4g小胶囊 (34.30 - 39.20s) ==================== -->
+  <div id="s6" class="scene" style="z-index:44; opacity:0; background:#F8F4EC;">
+    <div class="serif" style="position:absolute; top:135px; width:100%; text-align:center; font-size:78px; font-weight:900; color:#0B3B31;">
+      国家蓝帽双效 · 轻巧易吞服
+    </div>
+
+    <!-- Upper Section: Blue Hat + Dual Approved Functions -->
+    <div id="s6-top" style="position:absolute; left:72px; right:72px; top:275px;">
+      <div id="s6-bh" style="display:flex; align-items:center; justify-content:center; gap:32px; margin-bottom:40px;">
+        <img src="assets/official/blue_hat.png" style="height:175px; width:auto;" />
+        <div>
+          <div class="serif" style="font-size:70px; font-weight:900; color:#0B3B31;">国家蓝帽认证</div>
+          <div style="font-size:48px; color:#0072CE; font-weight:900; margin-top:8px;">国食健注 G20090546</div>
+        </div>
+      </div>
+
+      <div id="s6-bar1" style="position:relative; overflow:hidden; background:linear-gradient(135deg, #165448, #0E3830); color:#FFFFFF; padding:30px 42px; border-radius:16px; font-size:60px; font-weight:900; margin-bottom:26px; border-left:12px solid #FFE066; box-shadow:0 16px 34px rgba(14,56,48,0.22);">
+        <div id="s6-sh1" class="sheen"></div>
+        <span style="color:#FFE066;">✓</span> 有助于改善骨密度
+      </div>
+      <div id="s6-bar2" style="position:relative; overflow:hidden; background:linear-gradient(135deg, #165448, #0E3830); color:#FFFFFF; padding:30px 42px; border-radius:16px; font-size:60px; font-weight:900; border-left:12px solid #7FFFD4; box-shadow:0 16px 34px rgba(14,56,48,0.22);">
+        <div id="s6-sh2" class="sheen"></div>
+        <span style="color:#7FFFD4;">✓</span> 有助于增强免疫力
+      </div>
+    </div>
+
+    <div style="position:absolute; left:100px; right:100px; top:945px; height:3px; background:linear-gradient(90deg, transparent, rgba(201,154,59,0.55), transparent);"></div>
+
+    <!-- Lower Section: Bottle + 0.4g Small Capsule -->
+    <div id="s6-bot" style="position:absolute; left:72px; right:72px; top:1010px;">
+      <div class="serif" style="font-size:68px; font-weight:900; color:#0B3B31; text-align:center; margin-bottom:44px;">0.4g 小胶囊 · 易吞服</div>
+      <div style="display:flex; align-items:center; justify-content:center; gap:64px;">
+        <img src="assets/official/product_bottle.png" class="real-shadow" style="height:520px; width:auto;" />
+        <div>
+          <img id="s6-cap" src="assets/official/capsule_green.png" class="real-shadow" style="height:165px; width:auto; margin-bottom:32px;" />
+          <div id="s6-spec" style="font-size:64px; font-weight:900; color:#0B3B31; margin-bottom:30px;">42粒 / 瓶</div>
+          <div id="s6-dose" style="border-left:8px solid #C99A3B; padding-left:26px;">
+            <div style="font-size:60px; font-weight:900; color:#B87300; line-height:1.35;">每日2次<br>每次3粒</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== S7: 竖屏暖阳实景大牌落版 (39.00 - 45.00s，无前景药丸！) ==================== -->
+  <div id="s7" class="scene" style="z-index:48; opacity:0;">
+    <img id="s7-bg" src="assets/textures/bg_warm_sunlight.png"
+         style="position:absolute; inset:0; width:1080px; height:1920px; object-fit:cover; object-position:center;" />
+    <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(252,248,240,0.92) 0%, rgba(252,248,240,0.56) 28%, rgba(252,248,240,0.16) 54%, rgba(252,248,240,0.92) 82%, rgba(252,248,240,0.96) 100%);"></div>
+
+    <!-- Top Brand Header -->
+    <div id="s7-top" style="position:absolute; left:54px; right:54px; top:120px; text-align:center;">
+      <div style="display:inline-flex; align-items:center; gap:28px; margin-bottom:24px;">
+        <img src="assets/official/sanjin_logo.png" style="height:88px; width:auto;" />
+        <img src="assets/official/blue_hat.png" style="height:98px; width:auto;" />
+      </div>
+      <div class="serif" style="font-size:84px; font-weight:900; color:#0B3B31; line-height:1.16;">
+        GOP®氨糖软骨素<br>葛根胶囊
+      </div>
+    </div>
+
+    <!-- Center Official Box + Bottle ONLY (NO foreground pill!) -->
+    <div style="position:absolute; left:540px; top:940px; width:760px; height:760px; transform:translate(-50%,-50%); border-radius:50%; background:radial-gradient(circle, rgba(255,230,158,0.44) 0%, transparent 70%);"></div>
+    <div style="position:absolute; left:540px; top:1295px; width:720px; height:64px; transform:translateX(-50%); border-radius:50%; background:radial-gradient(ellipse, rgba(36,26,14,0.42) 0%, transparent 72%);"></div>
+    <img id="s7-combo" src="assets/official/product_combo.png" class="real-shadow"
+         style="position:absolute; left:540px; top:515px; height:790px; width:auto; transform:translateX(-50%);" />
+
+    <!-- Bottom Dual-Function Giant Lockup -->
+    <div id="s7-bot" style="position:absolute; left:54px; right:54px; top:1395px; text-align:center;">
+      <div id="s7-pill" class="pill-gold" style="font-size:50px; padding:18px 48px; margin-bottom:28px;">
+        <div id="s7-sheen" class="sheen"></div>
+        五重营养 · 蓝帽双效守护
+      </div>
+      <div style="font-size:54px; font-weight:900; color:#0B3B31; line-height:1.52;">
+        <div id="s7-fn1">有助于改善骨密度</div>
+        <div id="s7-fn2">有助于增强免疫力</div>
+      </div>
+    </div>
+
+    <!-- Mandatory Compliance Footer Bar -->
+    <div style="position:absolute; left:0; right:0; bottom:0; height:84px; background:rgba(10, 44, 37, 0.96); display:flex; align-items:center; justify-content:center; color:#FFFFFF; font-size:35px; font-weight:800; letter-spacing:0.1em;">
+      保健食品不是药物，不能代替药物治疗疾病。
+    </div>
+  </div>
+</div>
+
+<script>
+const motesLayer = document.getElementById('motes-layer');
+const motes = [];
+for (let i = 0; i < 26; i++) {
+  const el = document.createElement('div');
+  const sz = 4 + ((i * 7) % 10);
+  el.style.cssText = `position:absolute; width:${sz}px; height:${sz}px; border-radius:50%; background:${i % 3 === 0 ? '#FFE28A' : 'rgba(255,248,224,0.85)'}; box-shadow:0 0 ${sz * 2}px rgba(255,226,138,0.65);`;
+  motesLayer.appendChild(el);
+  motes.push({
+    el, x0: (i * 157) % 1080, y0: (i * 211) % 1920,
+    vy: 24 + (i % 5) * 10, vx: ((i % 3) - 1) * 7, ph: (i * 0.37) % 6.28
+  });
+}
+
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const prog = (t, a, b) => clamp((t - a) / Math.max(0.0001, b - a), 0, 1);
+const easeOutCubic = x => 1 - Math.pow(1 - x, 3);
+const easeExpoOut = x => x >= 1 ? 1 : (x <= 0 ? 0 : 1 - Math.pow(2, -9 * x));
+const easeQuintInOut = x => x < 0.5 ? 16 * Math.pow(x, 5) : 1 - Math.pow(-2 * x + 2, 5) / 2;
+const lerp = (a, b, x) => a + (b - a) * x;
+
+function relay(el, t, start, dur = 0.52, dx = 0, dy = 28) {
+  const p = easeExpoOut(prog(t, start, start + dur));
+  el.style.opacity = clamp(prog(t, start, start + Math.min(0.24, dur * 0.5)));
+  el.style.transform = `translate(${lerp(dx, 0, p).toFixed(1)}px, ${lerp(dy, 0, p).toFixed(1)}px)`;
+}
+
+function maskReveal(el, t, start, dur = 0.56) {
+  const p = easeExpoOut(prog(t, start, start + dur));
+  el.style.transform = `translateY(${lerp(110, 0, p).toFixed(1)}%)`;
+  el.style.opacity = clamp(prog(t, start, start + 0.16));
+}
+
+function sweepSheen(el, t, start, dur = 0.85) {
+  const p = prog(t, start, start + dur);
+  el.style.left = `${lerp(-160, 960, easeOutCubic(p)).toFixed(1)}px`;
+}
+
+function frameSrc(folder, idx) {
+  const n = Math.max(1, Math.min(94, Math.round(idx)));
+  return `assets/v5/${folder}/f_${String(n).padStart(4, '0')}.jpg`;
+}
+
+async function setFrame(imgEl, src) {
+  if (imgEl.dataset.cur === src) return;
+  imgEl.dataset.cur = src;
+  imgEl.src = src;
+  try { if (imgEl.decode) await imgEl.decode(); } catch (e) {}
+}
+
+window.renderAt = async function(t) {
+  const pending = [];
+  const pulse = (Math.sin(t * 7.0) + 1) * 0.5;
+
+  document.getElementById('prog-bar').style.width = `${(clamp(t / 45.0) * 100).toFixed(2)}%`;
+
+  const showMotes = (t >= 11.10 && t < 15.25) || (t >= 18.30 && t < 34.45) || (t >= 39.00);
+  motesLayer.style.opacity = showMotes ? 0.55 : 0;
+  if (showMotes) {
+    motes.forEach(m => {
+      const y = ((m.y0 - t * m.vy) % 1920 + 1920) % 1920;
+      const x = (m.x0 + Math.sin(t * 0.9 + m.ph) * 24 + t * m.vx) % 1080;
+      const op = 0.25 + 0.65 * ((Math.sin(t * 2.4 + m.ph) + 1) * 0.5);
+      m.el.style.left = `${x.toFixed(1)}px`;
+      m.el.style.top = `${y.toFixed(1)}px`;
+      m.el.style.opacity = op.toFixed(2);
+    });
+  }
+
+  const flare = document.getElementById('lens-sweep');
+  let flareP = -1;
+  if (t >= 29.60 && t <= 31.40) flareP = prog(t, 29.60, 31.40);
+  else if (t >= 39.30 && t <= 41.40) flareP = prog(t, 39.30, 41.40);
+  if (flareP >= 0) {
+    flare.style.opacity = Math.sin(flareP * Math.PI).toFixed(2);
+    flare.style.left = `${lerp(-420, 1250, easeOutCubic(flareP)).toFixed(1)}px`;
+  } else {
+    flare.style.opacity = 0;
+  }
+
+  const barOpen = easeQuintInOut(prog(t, 10.75, 11.30));
+  document.getElementById('bar-top').style.transform = `translateY(${(-barOpen * 100).toFixed(1)}px)`;
+  document.getElementById('bar-bot').style.transform = `translateY(${(barOpen * 100).toFixed(1)}px)`;
+
+  const tb = document.getElementById('topbar');
+  const tbBrand = document.getElementById('tb-brand');
+  const tbChap = document.getElementById('tb-chap');
+  tb.style.opacity = (t >= 11.20 && t < 39.00) ? 1 : 0;
+  const isDark = (t >= 11.10 && t < 34.40);
+  tbBrand.style.color = isDark ? '#FFFFFF' : '#12443B';
+  tbChap.style.color = isDark ? '#FFE066' : '#12443B';
+  tbChap.style.background = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.84)';
+
+  if (t < 18.35) tbChap.textContent = '02 原因解析';
+  else if (t < 34.35) tbChap.textContent = '03 五重营养赋能';
+  else tbChap.textContent = '04 蓝帽与规格';
+
+  // ==================== S1: Pain 1 Stairs Knee (0.00 - 3.90s) ====================
+  const s1 = document.getElementById('s1');
+  if (t <= 3.95) {
+    s1.style.opacity = 1;
+    const s1bg = document.getElementById('s1-bg');
+    pending.push(setFrame(s1bg, frameSrc('frames_02', 1 + t * 24)));
+    const pCam = prog(t, 0.0, 3.90);
+    const pFocus = easeExpoOut(prog(t, 0.0, 0.55));
+    s1bg.style.transform = `scale(${lerp(1.02, 1.07, pCam).toFixed(4)})`;
+    s1bg.style.filter = `blur(${lerp(6, 0, pFocus).toFixed(1)}px)`;
+
+    relay(document.getElementById('s1-kicker'), t, 0.10, 0.45, 0, -18);
+    maskReveal(document.getElementById('s1-l1'), t, 0.18, 0.55);
+    maskReveal(document.getElementById('s1-l2'), t, 0.55, 0.55);
+    document.getElementById('s1-rule').style.width = `${(easeExpoOut(prog(t, 0.90, 1.45)) * 380).toFixed(1)}px`;
+    maskReveal(document.getElementById('s1-sub'), t, 1.10, 0.55);
+
+    document.getElementById('s1-fx').style.opacity = easeExpoOut(prog(t, 1.55, 2.00));
+    const tIn = easeExpoOut(prog(t, 1.65, 2.15));
+    const tag1 = document.getElementById('s1-tag');
+    tag1.style.opacity = clamp(prog(t, 1.65, 1.95));
+    tag1.style.transform = `translate(-50%, ${lerp(30, 0, tIn).toFixed(1)}px)`;
+    document.getElementById('s1-r1').setAttribute('r', (48 + pulse * 16).toFixed(1));
+    document.getElementById('s1-r2').setAttribute('r', (84 + pulse * 22).toFixed(1));
+  } else {
+    s1.style.opacity = 0;
+  }
+
+  // ==================== S2A: Pain 2 Waist Pain (3.70 - 7.60s) ====================
+  const s2a = document.getElementById('s2a');
+  if (t >= 3.70 && t <= 7.65) {
+    const s2abg = document.getElementById('s2a-bg');
+    pending.push(setFrame(s2abg, frameSrc('frames_01', 1 + (t - 3.70) * 24)));
+    const pIn = easeQuintInOut(prog(t, 3.70, 4.18));
+    s2a.style.opacity = 1;
+    s2a.style.clipPath = `inset(0 0 0 ${((1 - pIn) * 100).toFixed(2)}%)`;
+
+    const pCam = prog(t, 3.75, 7.60);
+    s2abg.style.transform = `scale(${lerp(1.02, 1.06, pCam).toFixed(4)})`;
+    relay(document.getElementById('s2a-h1'), t, 3.92, 0.52, 0, -22);
+    relay(document.getElementById('s2a-agebox'), t, 4.55, 0.52, 0, 26);
+    document.getElementById('s2a-fx').style.opacity = easeExpoOut(prog(t, 5.10, 5.55));
+    const tIn = easeExpoOut(prog(t, 5.20, 5.70));
+    const tag2 = document.getElementById('s2a-tag');
+    tag2.style.opacity = clamp(prog(t, 5.20, 5.50));
+    tag2.style.transform = `translate(-50%, ${lerp(30, 0, tIn).toFixed(1)}px)`;
+    document.getElementById('s2a-r1').setAttribute('r', (48 + pulse * 16).toFixed(1));
+    document.getElementById('s2a-r2').setAttribute('r', (84 + pulse * 22).toFixed(1));
+    const age = Math.round(lerp(45, 65, easeOutCubic(prog(t, 4.30, 6.40))));
+    document.getElementById('s2a-age').textContent = age >= 65 ? '65+' : String(age);
+    sweepSheen(document.getElementById('s2a-sheen'), t, 5.10, 0.90);
+  } else {
+    s2a.style.opacity = 0;
+  }
+
+  // ==================== S2B: Pain 3 Night Leg Cramp (7.40 - 11.30s) ====================
+  const s2b = document.getElementById('s2b');
+  if (t >= 7.40 && t <= 11.35) {
+    const s2bbg = document.getElementById('s2b-bg');
+    pending.push(setFrame(s2bbg, frameSrc('frames_03', 1 + (t - 7.40) * 24)));
+    const pIn = easeQuintInOut(prog(t, 7.40, 7.88));
+    s2b.style.opacity = 1;
+    s2b.style.clipPath = `inset(0 0 0 ${((1 - pIn) * 100).toFixed(2)}%)`;
+
+    const pCam = prog(t, 7.45, 10.50);
+    s2bbg.style.transform = `scale(${lerp(1.02, 1.07, pCam).toFixed(4)})`;
+    relay(document.getElementById('s2b-b1'), t, 7.62, 0.45, 0, -20);
+    relay(document.getElementById('s2b-h1'), t, 8.05, 0.52, 0, 24);
+    relay(document.getElementById('s2b-sub'), t, 8.65, 0.50, 0, 22);
+    document.getElementById('s2b-fx').style.opacity = easeExpoOut(prog(t, 8.70, 9.15));
+    document.getElementById('s2b-r1').setAttribute('r', (52 + pulse * 16).toFixed(1));
+    document.getElementById('s2b-r2').setAttribute('r', (88 + pulse * 22).toFixed(1));
+
+    const pZoom = easeQuintInOut(prog(t, 10.48, 11.30));
+    const zEl = document.getElementById('s2b-zoom');
+    zEl.style.transform = `scale(${lerp(1.0, 2.75, pZoom).toFixed(4)})`;
+    zEl.style.filter = `blur(${(pZoom * 4.5).toFixed(1)}px)`;
+  } else {
+    s2b.style.opacity = 0;
+  }
+
+  // ==================== S3: Vertical Clinical X-Ray + Circular HUD (11.10 - 15.30s) ====================
+  const s3 = document.getElementById('s3');
+  if (t >= 11.08 && t <= 15.35) {
+    const pIn = easeExpoOut(prog(t, 11.08, 11.62));
+    const pOut = easeQuintInOut(prog(t, 14.90, 15.32));
+    s3.style.opacity = clamp(prog(t, 11.08, 11.36));
+    s3.style.transform = `scale(${lerp(1.12, 1.0, pIn).toFixed(4)})`;
+    s3.style.clipPath = `inset(0 0 ${(pOut * 100).toFixed(2)}% 0)`;
+
+    const scanY = 640 + Math.sin(prog(t, 11.2, 15.0) * Math.PI * 2.5) * 240;
+    document.getElementById('s3-beam').style.top = `${scanY.toFixed(1)}px`;
+    document.getElementById('s3-ret1').style.transform = `rotate(${(t * 18).toFixed(1)}deg)`;
+    document.getElementById('s3-ret2').style.transform = `rotate(${(-t * 26).toFixed(1)}deg)`;
+    relay(document.getElementById('s3-title'), t, 11.20, 0.50, 0, -24);
+    relay(document.getElementById('s3-card1'), t, 11.75, 0.54, -24, 24);
+    relay(document.getElementById('s3-card2'), t, 12.40, 0.54, 24, 24);
+    relay(document.getElementById('s3-sum'), t, 13.15, 0.55, 0, 32);
+
+    const pDrop = easeOutCubic(prog(t, 11.95, 14.45));
+    const v1 = Math.round(lerp(85, 48, pDrop));
+    const v2 = Math.round(lerp(82, 42, pDrop));
+    const C = 703.7;
+    document.getElementById('s3-g1').setAttribute('stroke-dashoffset', (C * (1 - v1 / 100)).toFixed(1));
+    document.getElementById('s3-g2').setAttribute('stroke-dashoffset', (C * (1 - v2 / 100)).toFixed(1));
+    document.getElementById('s3-p1').textContent = `${v1}%`;
+    document.getElementById('s3-p2').textContent = `${v2}%`;
+  } else {
+    s3.style.opacity = 0;
+  }
+
+  // ==================== S4: Vertical Diagonal Split + Plain White Bottle (15.10 - 18.50s) ====================
+  const s4 = document.getElementById('s4');
+  if (t >= 15.08 && t <= 18.55) {
+    const pIn = easeQuintInOut(prog(t, 15.08, 15.48));
+    const pOut = easeQuintInOut(prog(t, 18.12, 18.52));
+    s4.style.opacity = 1 - pOut;
+    s4.style.clipPath = `inset(${((1 - pIn) * 100).toFixed(2)}% 0 0 0)`;
+    document.getElementById('s4-blade').setAttribute('stroke-dashoffset', (1200 * (1 - easeExpoOut(prog(t, 15.18, 15.92)))).toFixed(1));
+    const pDr = prog(t, 15.1, 18.5);
+    document.getElementById('s4-bottle').style.transform = `translateX(-50%) scale(${lerp(0.94, 1.03, pDr).toFixed(4)}) translateY(${(Math.sin(pDr * Math.PI * 2) * 8).toFixed(1)}px)`;
+    relay(document.getElementById('s4-l'), t, 15.55, 0.52, 0, -24);
+    relay(document.getElementById('s4-r'), t, 16.45, 0.52, 0, 28);
+  } else {
+    s4.style.opacity = 0;
+  }
+
+  // ==================== S5 (9:16): Joint Orbit + Food Cards -> Absorb -> Flex (18.30 - 34.50s) ====================
+  const s5 = document.getElementById('s5');
+  if (t >= 18.28 && t <= 34.55) {
+    const pIn = easeQuintInOut(prog(t, 18.28, 18.75));
+    const pOut = easeQuintInOut(prog(t, 34.10, 34.52));
+    s5.style.opacity = clamp(pIn) * (1 - pOut);
+
+    const pAbsorb = easeQuintInOut(prog(t, 28.00, 30.10));
+    const pBurst = prog(t, 29.85, 31.10);
+    const pFlex = prog(t, 30.20, 34.20);
+    const pCenterShift = easeQuintInOut(prog(t, 28.10, 29.80));
+
+    const cx = 540;
+    const cy = lerp(660, 920, pCenterShift);
+
+    // Move joint + rings + aura smoothly to center when bottom cards fade out in Phase 3
+    const dyShift = cy - 660;
+    document.getElementById('s5-ring-back').style.transform = `translateY(${dyShift.toFixed(1)}px)`;
+    document.getElementById('s5-ring-front').style.transform = `translateY(${dyShift.toFixed(1)}px)`;
+    document.getElementById('s5-aura').style.top = `${cy.toFixed(1)}px`;
+    document.getElementById('s5-wave').style.top = `${cy.toFixed(1)}px`;
+
+    const titleEl = document.getElementById('s5-title');
+    if (t < 23.10) {
+      titleEl.innerHTML = '五重营养环绕 · <span style="color:#FFE066;">氨糖软骨素 + 钙</span>';
+    } else if (t < 28.00) {
+      titleEl.innerHTML = '协同促吸收 · <span style="color:#FFE066;">更添特色葛根素</span>';
+    } else {
+      titleEl.innerHTML = '营养直达关节 · <span style="color:#FFE066;">灵活舒展更有劲</span>';
+    }
+
+    const baseAngles = [-2.35, -0.78, 0.35, 1.57, 2.75];
+    const rxBase = 310, ryBase = 195;
+    const rotSpeed = 0.58;
+    const spinExtra = pAbsorb * 4.2;
+    const radScale = 1.0 - pAbsorb;
+
+    for (let i = 0; i < 5; i++) {
+      const orb = document.getElementById(`orb-${i + 1}`);
+      const ang = baseAngles[i] + (t - 18.3) * rotSpeed + spinExtra;
+      const ox = cx + Math.cos(ang) * rxBase * radScale;
+      const oy = cy + Math.sin(ang) * ryBase * radScale;
+      const depthScale = lerp(0.84, 1.08, (Math.sin(ang) + 1) * 0.5) * lerp(1.0, 0.25, pAbsorb);
+      orb.style.left = `${ox.toFixed(1)}px`;
+      orb.style.top = `${oy.toFixed(1)}px`;
+      orb.style.transform = `translate(-50%,-50%) scale(${depthScale.toFixed(3)})`;
+      orb.style.opacity = (clamp(prog(t, 18.45 + i * 0.12, 19.05 + i * 0.12)) * (1 - clamp(prog(t, 29.55, 30.10)))).toFixed(2);
+      orb.style.zIndex = Math.sin(ang) > 0 ? 15 : 7;
+    }
+
+    const p1Out = 1 - clamp(prog(t, 22.75, 23.25));
+    const c1In = easeExpoOut(prog(t, 18.65, 19.25));
+    const c2In = easeExpoOut(prog(t, 19.80, 20.40));
+    const p1c1 = document.getElementById('p1-c1');
+    const p1c2 = document.getElementById('p1-c2');
+    p1c1.style.opacity = (clamp(prog(t, 18.65, 19.00)) * p1Out).toFixed(2);
+    p1c1.style.transform = `translateY(${lerp(36, 0, c1In).toFixed(1)}px)`;
+    p1c2.style.opacity = (clamp(prog(t, 19.80, 20.15)) * p1Out).toFixed(2);
+    p1c2.style.transform = `translateY(${lerp(36, 0, c2In).toFixed(1)}px)`;
+
+    const p2Out = 1 - clamp(prog(t, 27.65, 28.15));
+    const d1In = easeExpoOut(prog(t, 23.35, 23.95));
+    const d2In = easeExpoOut(prog(t, 24.55, 25.15));
+    const p2c1 = document.getElementById('p2-c1');
+    const p2c2 = document.getElementById('p2-c2');
+    p2c1.style.opacity = (clamp(prog(t, 23.35, 23.70)) * p2Out).toFixed(2);
+    p2c1.style.transform = `translateY(${lerp(36, 0, d1In).toFixed(1)}px)`;
+    p2c2.style.opacity = (clamp(prog(t, 24.55, 24.90)) * p2Out).toFixed(2);
+    p2c2.style.transform = `translateY(${lerp(36, 0, d2In).toFixed(1)}px)`;
+
+    const wave = document.getElementById('s5-wave');
+    if (pBurst > 0 && pBurst < 1) {
+      wave.style.opacity = Math.sin(pBurst * Math.PI).toFixed(2);
+      wave.style.transform = `translate(-50%,-50%) scale(${lerp(0.6, 4.4, easeOutCubic(pBurst)).toFixed(2)})`;
+    } else {
+      wave.style.opacity = 0;
+    }
+
+    document.getElementById('s5-aura').style.opacity = (0.45 + 0.45 * clamp(prog(t, 29.4, 30.4)) + 0.12 * pulse).toFixed(2);
+
+    const jUp = document.getElementById('s5-j-up');
+    const jLo = document.getElementById('s5-j-lo');
+    const jWrap = document.getElementById('s5-joint-wrap');
+    jWrap.style.top = `${cy.toFixed(1)}px`;
+    if (pFlex > 0) {
+      const bend = Math.sin(pFlex * Math.PI * 2.0);
+      jUp.style.transform = `rotate(${(-bend * 13.5).toFixed(2)}deg)`;
+      jLo.style.transform = `rotate(${(bend * 18.5).toFixed(2)}deg)`;
+      const scalePop = lerp(1.0, 1.24, pCenterShift);
+      jWrap.style.transform = `translate(-50%,-50%) scale(${scalePop.toFixed(3)})`;
+    } else {
+      const breathe = lerp(1.0, 1.20, pCenterShift) + Math.sin(t * 2.4) * 0.015;
+      jUp.style.transform = 'rotate(0deg)';
+      jLo.style.transform = 'rotate(0deg)';
+      jWrap.style.transform = `translate(-50%,-50%) scale(${breathe.toFixed(3)})`;
+    }
+
+    const p3Vis = easeExpoOut(prog(t, 30.15, 30.85));
+    const p3El = document.getElementById('p3-banner');
+    p3El.style.opacity = p3Vis.toFixed(2);
+    p3El.style.transform = `translate(-50%, ${lerp(28, 0, p3Vis).toFixed(1)}px)`;
+  } else {
+    s5.style.opacity = 0;
+  }
+
+  // ==================== S6: Vertical Blue Hat + 0.4g Capsule (34.30 - 39.20s) ====================
+  const s6 = document.getElementById('s6');
+  if (t >= 34.28 && t <= 39.25) {
+    const pIn = easeQuintInOut(prog(t, 34.28, 34.70));
+    s6.style.opacity = 1;
+    s6.style.clipPath = `inset(0 0 0 ${((1 - pIn) * 100).toFixed(2)}%)`;
+    relay(document.getElementById('s6-bh'), t, 34.48, 0.48, 0, -22);
+    relay(document.getElementById('s6-bar1'), t, 35.02, 0.50, -34, 0);
+    relay(document.getElementById('s6-bar2'), t, 35.62, 0.50, -34, 0);
+    relay(document.getElementById('s6-bot'), t, 36.25, 0.52, 0, 28);
+    relay(document.getElementById('s6-spec'), t, 36.75, 0.45, 24, 0);
+    relay(document.getElementById('s6-dose'), t, 37.25, 0.48, 24, 0);
+    sweepSheen(document.getElementById('s6-sh1'), t, 35.35, 0.90);
+    sweepSheen(document.getElementById('s6-sh2'), t, 35.75, 0.90);
+    const pDr = prog(t, 34.3, 39.2);
+    document.getElementById('s6-cap').style.transform = `rotate(${lerp(16, 30, pDr).toFixed(1)}deg) translateY(${(Math.sin(pDr * Math.PI * 2) * 10).toFixed(1)}px)`;
+  } else {
+    s6.style.opacity = 0;
+  }
+
+  // ==================== S7: Vertical Sunlit Finale (39.00 - 45.00s, NO pill!) ====================
+  const s7 = document.getElementById('s7');
+  if (t >= 38.98) {
+    s7.style.opacity = clamp(prog(t, 38.98, 39.42));
+    const pDr = prog(t, 39.00, 45.00);
+    document.getElementById('s7-bg').style.transform = `scale(${lerp(1.08, 1.00, pDr).toFixed(4)})`;
+    const cIn = easeExpoOut(prog(t, 39.08, 39.80));
+    document.getElementById('s7-combo').style.transform = `translateX(-50%) translateY(${lerp(36, 0, cIn).toFixed(1)}px) scale(${lerp(1.03, 0.99, pDr).toFixed(4)})`;
+    relay(document.getElementById('s7-top'), t, 39.20, 0.55, 0, -24);
+    relay(document.getElementById('s7-pill'), t, 40.05, 0.52, 0, 26);
+    relay(document.getElementById('s7-fn1'), t, 40.75, 0.50, 0, 22);
+    relay(document.getElementById('s7-fn2'), t, 41.35, 0.50, 0, 22);
+    sweepSheen(document.getElementById('s7-sheen'), t, 40.30, 1.00);
+  } else {
+    s7.style.opacity = 0;
+  }
+
+  if (pending.length) await Promise.all(pending);
+};
+
+window.renderAt(20.5);
+</script>
+
+<script>
+// Data-driven config injector for ecom-tvc-studio (supports both live Web UI preview & headless render)
+window.__STUDIO_CFG = null;
+
+// SRT-driven piecewise-linear time remapping (realT -> canonical 45s timeline)
+const __rawRenderAt = window.renderAt;
+window.mapRealToCanonical = function(realT) {
+  const timings = window.__STUDIO_CFG && window.__STUDIO_CFG.scene_timings;
+  if (!Array.isArray(timings) || !timings.length) return realT;
+  for (let i = 0; i < timings.length; i++) {
+    const seg = timings[i];
+    if (realT <= seg.end || i === timings.length - 1) {
+      const span = Math.max(0.001, seg.end - seg.start);
+      const u = Math.max(0, Math.min(1, (realT - seg.start) / span));
+      return seg.canon_start + u * (seg.canon_end - seg.canon_start);
+    }
+  }
+  return realT;
+};
+window.renderAt = function(realT) {
+  return __rawRenderAt(window.mapRealToCanonical(realT));
+};
+
+function setTxt(sel, val) {
+  if (val === undefined || val === null) return;
+  const el = document.querySelector(sel);
+  if (el) el.textContent = val;
+}
+
+window.applyConfig = function(cfg) {
+  if (!cfg) return;
+  window.__STUDIO_CFG = cfg;
+  const b = cfg.brand || {};
+  const p = cfg.pain_points || {};
+  const d = cfg.diagnosis || {};
+  const n = cfg.nutrients || {};
+
+  // Brand & topbar
+  setTxt('#tb-brand span:last-child', b.product_name);
+  setTxt('#s1-kicker span:last-child', b.category_tag);
+  setTxt('#s1-l1', p.hook_line1);
+  setTxt('#s1-l2', p.hook_line2);
+  setTxt('#s1-sub', p.hook_sub);
+  setTxt('#s1-tag', p.pain1_tag);
+
+  // S2A & S2B
+  const s2aH = document.querySelector('#s2a-h1') || document.querySelector('#s2a-copy .serif');
+  if (s2aH && p.pain2_headline) {
+    s2aH.innerHTML = `${p.pain2_headline}<br><span style="color:#FFE066;">${p.pain2_subhead || ''}</span>`;
+  }
+  setTxt('#s2a-tag', p.pain2_tag);
+  setTxt('#s2b-b1', p.pain3_badge);
+  setTxt('#s2b-h1', p.pain3_title);
+  setTxt('#s2b-sub', p.pain3_sub);
+
+  // S3 & S4
+  const s3T = document.querySelector('#s3-title') || document.querySelector('#s3-right .serif');
+  if (s3T && d.title_left) {
+    s3T.innerHTML = `${d.title_left} · <span style="color:#FFE066;">${d.title_right || ''}</span>`;
+  }
+  setTxt('#s4-l > div:first-child', d.lack1_title);
+  setTxt('#s4-l > div:last-child', d.lack1_desc);
+  setTxt('#s4-r > div:first-child', d.lack2_title);
+  setTxt('#s4-r > div:last-child', d.lack2_desc);
+
+  // S5 Nutrient analogy cards (supports both 9:16 #p1-c1..#p2-c2 and 16:9 #p1-l..#p2-r)
+  const mapCard = (sel, pill, ana, ben) => {
+    const el = document.querySelector(sel);
+    if (!el) return;
+    const kids = el.children;
+    if (kids[0] && pill) kids[0].textContent = pill;
+    if (kids[2] && ana) kids[2].textContent = ana;
+    if (kids[3] && ben) kids[3].textContent = ben;
+  };
+  mapCard('#p1-c1', n.card1_pill, n.card1_analogy, n.card1_benefit);
+  mapCard('#p1-c2', n.card2_pill, n.card2_analogy, n.card2_benefit);
+  mapCard('#p2-c1', n.card3_pill, n.card3_analogy, n.card3_benefit);
+  mapCard('#p2-c2', n.card4_pill, n.card4_analogy, n.card4_benefit);
+  mapCard('#p1-l', n.card1_pill, n.card1_analogy, n.card1_benefit);
+  mapCard('#p1-r', n.card2_pill, n.card2_analogy, n.card2_benefit);
+  mapCard('#p2-l', n.card3_pill, n.card3_analogy, n.card3_benefit);
+  mapCard('#p2-r', n.card4_pill, n.card4_analogy, n.card4_benefit);
+  setTxt('#p3-banner .pill-gold', n.phase3_banner);
+
+  // S6 Blue Hat & Spec
+  setTxt('#s6-bh .serif', b.approval_title);
+  const bhNo = document.querySelector('#s6-bh div div:last-child');
+  if (bhNo && b.approval_no) bhNo.textContent = b.approval_no;
+  const b1 = document.querySelector('#s6-bar1');
+  if (b1 && b.function_1) b1.innerHTML = `<div id="s6-sh1" class="sheen"></div><span style="color:#FFE066;">✓</span> ${b.function_1}`;
+  const b2 = document.querySelector('#s6-bar2');
+  if (b2 && b.function_2) b2.innerHTML = `<div id="s6-sh2" class="sheen"></div><span style="color:#7FFFD4;">✓</span> ${b.function_2}`;
+  setTxt('#s6-spec', b.spec_pack);
+  const doseEl = document.querySelector('#s6-dose > div');
+  if (doseEl && b.dosage_line1) doseEl.innerHTML = `${b.dosage_line1}<br>${b.dosage_line2 || ''}`;
+
+  // S7 Finale & Compliance Footer
+  const finName = document.querySelector('#s7-top .serif') || document.querySelector('#s7-copy .serif');
+  if (finName && b.product_name_line1) finName.innerHTML = `${b.product_name_line1}<br>${b.product_name_line2 || ''}`;
+  const finPill = document.querySelector('#s7-pill') || document.querySelector('#s7-copy .pill-gold');
+  if (finPill && b.finale_badge) finPill.innerHTML = `<div id="s7-sheen" class="sheen"></div>${b.finale_badge}`;
+  setTxt('#s7-fn1', b.function_1);
+  setTxt('#s7-fn2', b.function_2);
+  const compBar = document.querySelector('#s7 > div:last-child');
+  if (compBar && b.compliance_footer) compBar.textContent = b.compliance_footer;
+};
+
+// Auto-load project config when opened via studio server (?project=sanjin-antang)
+(async function() {
+  const qs = new URLSearchParams(location.search);
+  const pid = qs.get('project');
+  if (pid) {
+    try {
+      const r = await fetch(`/api/projects/${encodeURIComponent(pid)}`);
+      if (r.ok) {
+        const data = await r.json();
+        window.applyConfig(data.config);
+      }
+    } catch (e) {}
+  }
+  const tInit = parseFloat(qs.get('t') || '1.8');
+  if (typeof window.renderAt === 'function') window.renderAt(isNaN(tInit) ? 1.8 : tInit);
+})();
+
+window.addEventListener('message', (ev) => {
+  if (!ev.data) return;
+  if (ev.data.type === 'applyConfig') window.applyConfig(ev.data.config);
+  if (ev.data.type === 'seek' && typeof window.renderAt === 'function') window.renderAt(ev.data.t);
+});
+</script>
+
+</body>
+</html>

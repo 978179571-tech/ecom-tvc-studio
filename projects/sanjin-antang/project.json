@@ -1,0 +1,142 @@
+{
+  "project_id": "sanjin-antang",
+  "project_name": "三金® GOP®氨糖软骨素葛根胶囊",
+  "duration": 45.0,
+  "fps": 24,
+  "brand": {
+    "brand_name": "三金®",
+    "product_name": "GOP®氨糖软骨素葛根胶囊",
+    "product_name_line1": "GOP®氨糖软骨素",
+    "product_name_line2": "葛根胶囊",
+    "category_tag": "中老年骨骼关节养护",
+    "approval_title": "国家蓝帽认证",
+    "approval_no": "国食健注 G20090546",
+    "function_1": "有助于改善骨密度",
+    "function_2": "有助于增强免疫力",
+    "capsule_title": "0.4g 小胶囊 · 易吞服",
+    "spec_pack": "42粒 / 瓶",
+    "dosage_line1": "每日2次",
+    "dosage_line2": "每次3粒",
+    "finale_badge": "五重营养 · 蓝帽双效守护",
+    "compliance_footer": "保健食品不是药物，不能代替药物治疗疾病。"
+  },
+  "pain_points": {
+    "hook_line1": "上楼腰疼、腿疼",
+    "hook_line2": "腿抽筋？",
+    "hook_sub": "45岁后，只补钙远远不够",
+    "pain1_tag": "上下楼梯关节疼、腿疼",
+    "pain2_headline": "年龄越大",
+    "pain2_subhead": "骨量与氨糖流失越快",
+    "pain2_tag": "腰疼直不起来",
+    "pain3_badge": "夜间痛点警报",
+    "pain3_title": "夜间腿脚经常抽筋",
+    "pain3_sub": "骨量与氨糖流失的信号"
+  },
+  "diagnosis": {
+    "title_left": "骨量流失",
+    "title_right": "软骨磨损",
+    "metric1_name": "骨密度",
+    "metric1_start": 85,
+    "metric1_end": 48,
+    "metric2_name": "关节氨糖",
+    "metric2_start": 82,
+    "metric2_end": 42,
+    "contrast_left": "只补单钙，",
+    "contrast_right": "远远不够",
+    "lack1_title": "缺软骨营养",
+    "lack1_desc": "单补钙，补不到关节软骨",
+    "lack2_title": "缺 VD3 促吸收",
+    "lack2_desc": "吸收慢，更缺特色葛根素"
+  },
+  "nutrients": {
+    "phase1_title_left": "五重营养环绕",
+    "phase1_title_right": "氨糖软骨素 + 钙",
+    "phase2_title_left": "协同促吸收",
+    "phase2_title_right": "更添特色葛根素",
+    "phase3_title_left": "营养直达关节",
+    "phase3_title_right": "灵活舒展更有劲",
+    "phase3_banner": "五重营养协同注入 · 护骨更护膝",
+    "card1_pill": "氨糖432mg + 软骨素324mg",
+    "card1_analogy": "≈ 约 10g 深海鲨鱼软骨",
+    "card1_benefit": "润泽养护关节软骨",
+    "card2_pill": "每日6粒 含钙 192mg",
+    "card2_analogy": "≈ 约 1 大杯鲜牛奶",
+    "card2_benefit": "夯实致密骨量基础",
+    "card3_pill": "维生素D3 70μg/100g",
+    "card3_analogy": "≈ 约 2 个新鲜鸡蛋黄",
+    "card3_benefit": "协同促进钙吸收",
+    "card4_pill": "★ 特别添加 葛根素 0.55g",
+    "card4_analogy": "≈ 约 1 碗鲜炖葛根",
+    "card4_benefit": "东方草本 · 区别普通氨糖"
+  },
+  "audio": {
+    "enable_bgm": true,
+    "enable_sfx": true,
+    "enable_vo": true,
+    "voice": "zh-CN-YunyangNeural",
+    "bgm_gain": 0.46,
+    "sfx_scale": 1,
+    "vo_lines": [
+      {
+        "id": "01_s1",
+        "start": 0.1,
+        "max_dur": 3.58,
+        "text": "上下楼梯关节疼、腿疼？四十五岁后，只补钙远远不够。"
+      },
+      {
+        "id": "02_s2a",
+        "start": 3.9,
+        "max_dur": 3.43,
+        "text": "年龄越大，腰疼直不起来，骨量和氨糖流失越来越快。"
+      },
+      {
+        "id": "03_s2b",
+        "start": 7.55,
+        "max_dur": 3.43,
+        "text": "夜间腿脚经常抽筋，正是骨量与氨糖流失的信号。"
+      },
+      {
+        "id": "04_s3",
+        "start": 11.2,
+        "max_dur": 3.78,
+        "text": "骨密度持续下降，关节软骨不断磨损，需要同步科学补充。"
+      },
+      {
+        "id": "05_s4",
+        "start": 15.2,
+        "max_dur": 3.03,
+        "text": "只补单钙，补不到关节软骨，也缺维D3促吸收。"
+      },
+      {
+        "id": "06_s5a",
+        "start": 18.45,
+        "max_dur": 4.48,
+        "text": "每日六粒，补足约十克深海鲨鱼软骨营养，再加一大杯鲜牛奶的钙。"
+      },
+      {
+        "id": "07_s5b",
+        "start": 23.15,
+        "max_dur": 4.8,
+        "text": "搭配约两个鸡蛋黄的维D3协同促吸收，更特别添加东方草本葛根素。"
+      },
+      {
+        "id": "08_s5c",
+        "start": 28.2,
+        "max_dur": 5.78,
+        "text": "五重营养协同注入关节，润泽养护关节软骨，护骨更护膝。"
+      },
+      {
+        "id": "09_s6",
+        "start": 34.4,
+        "max_dur": 4.56,
+        "text": "国家蓝帽认证，有助于改善骨密度、增强免疫力，小胶囊易吞服。"
+      },
+      {
+        "id": "10_s7",
+        "start": 39.25,
+        "max_dur": 5.68,
+        "text": "三金氨糖软骨素葛根胶囊，五重营养，蓝帽双效守护。"
+      }
+    ]
+  }
+}
