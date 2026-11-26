@@ -3,7 +3,10 @@ __pycache__/
 .venv/
 venv/
 *.log
+projects/*
+!projects/sanjin-antang/
 projects/*/out/
 projects/*/assets/v5/frames_*/
+projects/*/assets/clips/
 .DS_Store
 Thumbs.db

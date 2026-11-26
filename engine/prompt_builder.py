@@ -1,95 +1,149 @@
-"""Generate ready-to-copy Chinese image & image-to-video prompts from project.json.
+"""Director-Grade Segmented Chinese Prompt Builder (2.0).
 
-Supports BOTH:
-  - Universal dynamic scenes[] mode (generates tailored prompts per scene block & category)
-  - Legacy sanjin-antang demo mode
+Enforces the agreed 2.0 Prompt Standards:
+  1. Top-pinned mandatory platform parameter header on every shot:
+     【平台必选参数】画幅比例 | 建议生成时长（按+0%原速配音算准） | 必传官方参考图清单
+  2. Multi-beat time-segmented director descriptions (【0-1.8s】...【1.8-3.6s】...【3.6-5.0s】)
+     specifying camera framing, lighting/materials, and progressive action choreography.
+  3. Product reveal (`proof_spec`) ALWAYS generates a dynamic multi-image-reference showcase
+     video prompt (never lazy static-image fallback) to keep Chinese packaging 100% sharp & ungarbled.
 """
 
 from __future__ import annotations
 
 SCENE_TYPE_GUIDE = {
-    "hero_hook": ("痛点实拍首帧 + 图生视频", "16:9", "可灵 / 即梦 / Seedance / Gemini"),
-    "data_hud": ("科学机理 / 透视视觉图", "1:1 / 16:9", "GPT Image / Gemini / 即梦"),
-    "split_contrast": ("对照方案静物图（无标纯色）", "1:1", "GPT Image / 即梦"),
-    "orbit_cards": ("核心成分 / 卖点主体与类比静物", "1:1", "GPT Image / 即梦"),
-    "proof_spec": ("官方权威背书与产品规格特写", "原图优先", "使用官方原图（零 AI 重绘）"),
-    "brand_finale": ("暖阳实景大牌桌面背景", "16:9", "GPT Image / Midjourney / 即梦"),
-    "custom_card": ("通用高质感商业场景配图", "16:9", "Gemini / 即梦 / Midjourney"),
+    "hero_hook": ("痛点实拍钩子", "即梦 3.0 / 可灵"),
+    "proof_spec": ("真品高光动态出场（多图主体参考）", "即梦 3.0 多图参考 / 可灵多主体参考"),
+    "data_hud": ("3D 超微距科研机理 CG", "即梦 3.0 / 可灵（3D 医疗科研渲染）"),
+    "split_contrast": ("前后对比 / 新旧方案对照", "即梦 3.0 / 可灵"),
+    "orbit_cards": ("多场景人群 / 成分矩阵（3D轮播）", "即梦 3.0 / 可灵"),
+    "brand_finale": ("修护舒展与品牌温暖落版", "即梦 3.0 / 可灵"),
+    "custom_card": ("卖点渗透实证特写", "即梦 3.0 / 可灵"),
 }
+
+
+def _infer_scene_ratio(cfg: dict, sc: dict) -> str:
+    if sc.get("prompt_ratio"):
+        return str(sc["prompt_ratio"])
+    vp_mode = str(sc.get("vp_mode") or "")
+    if vp_mode in ("coverflow3", "split3"):
+        return "9:16 竖屏（共需 3 条独立竖版视频）"
+    tmode = str(cfg.get("template_mode") or "dynamic")
+    if tmode == "ref_frame":
+        vp_r = str(cfg.get("viewport_ratio") or "16:9")
+        return f"{vp_r} 横屏（嵌入三段式中间动态视窗）"
+    return "9:16 竖屏（全屏沉浸式）"
+
+
+def _header_banner(ratio_txt: str, sc_dur: float, rec_sec: int, ref_imgs: str) -> str:
+    return (
+        f"【平台必选参数】画幅比例：{ratio_txt} ｜ 建议生成时长：{rec_sec}秒（对应原速口播 {sc_dur:.1f}s）"
+        f" ｜ 必传参考图：{ref_imgs}\n"
+    )
 
 
 def _build_dynamic_prompts(cfg: dict) -> list[dict]:
     brand = cfg.get("brand") or {}
     prod_name = brand.get("product_name") or cfg.get("project_name") or "本产品"
-    cat_tag = brand.get("category_tag") or "电商商业短视频"
+    cat_tag = brand.get("category_tag") or "大健康与品质消费"
+    category = str(cfg.get("category") or "general").lower()
     scenes = cfg.get("scenes") or []
     packs: list[dict] = []
 
     for idx, sc in enumerate(scenes):
         stype = sc.get("type", "custom_card")
+        vp_mode = sc.get("vp_mode", "clip")
         title = sc.get("title", f"第 {idx + 1} 幕")
         sub = sc.get("subtitle", "")
-        badge = sc.get("badge", "")
         vo = sc.get("vo_text", "")
-        group, ratio, model = SCENE_TYPE_GUIDE.get(stype, SCENE_TYPE_GUIDE["custom_card"])
+        st = float(sc.get("start", 0.0))
+        en = float(sc.get("end", st + 4.5))
+        sc_dur = max(2.0, en - st)
+        rec_sec = int(sc.get("rec_gen_sec") or (5 if sc_dur <= 4.8 else 10))
+        ratio_txt = _infer_scene_ratio(cfg, sc)
+        group, model = SCENE_TYPE_GUIDE.get(stype, SCENE_TYPE_GUIDE["custom_card"])
 
-        if stype == "hero_hook":
-            p_img = (
-                f"16:9 宽银幕 35mm 电影商业摄影质感，主题：{cat_tag}。"
-                f"真实中国消费人群生活实景，画面直观传达「{title}」（{sub}）。"
-                f"自然柔和窗光，浅景深电影虚化，真实情绪克制不夸张，无文字、无 Logo、无水印。"
+        if sc.get("custom_prompt_image") or sc.get("custom_prompt_video"):
+            ref_hint = sc.get("ref_assets") or ("产品事实库官方外盒+内袋+实物原图" if stype == "proof_spec" else "无需传产品图（纯场景生成）")
+            hdr = _header_banner(ratio_txt, sc_dur, rec_sec, ref_hint)
+            packs.append({
+                "id": sc.get("id", f"s{idx + 1:02d}"),
+                "group": f"{group}（{sc.get('id', '')}）",
+                "title": f"第 {idx + 1} 镜 · {title}（{st:.1f}–{en:.1f}s，共 {sc_dur:.1f}s）",
+                "ratio": f"{ratio_txt} · 选 {rec_sec}s",
+                "recommended_model": sc.get("prompt_model") or model,
+                "prompt_image": hdr + str(sc.get("custom_prompt_image", "")),
+                "prompt_video": hdr + str(sc.get("custom_prompt_video", "")) if sc.get("custom_prompt_video") else "",
+            })
+            continue
+
+        if vp_mode in ("coverflow3", "split3"):
+            items = sc.get("items") or [{"title": "场景人群1"}, {"title": "场景人群2"}, {"title": "场景人群3"}]
+            hdr = _header_banner("9:16 竖屏（请分别勾选 9:16 竖屏生成 3 条）", sc_dur, 5, "无需传产品包装图")
+            sub_prompts = []
+            for ci, it in enumerate(items[:3]):
+                it_title = it.get("title", f"适用人群{ci + 1}")
+                sub_prompts.append(
+                    f"▶ 卡片 0{ci + 1}《{it_title}》（9:16 竖屏 · 5秒）：\n"
+                    f"  商业写实摄影，85mm 浅景深中景构图，人物头顶预留充足天空/环境呼吸空间，痛处/关注部位位于画面中偏下三分之二处（避免贴底被名牌遮挡）。"
+                    f"【0-1.8s】真实中国目标受众在典型日常场景中自然活动并因「{it_title}」放慢停步；"
+                    f"【1.8-5.0s】微俯身用手轻扶/揉按不适部位，面露真实克制的微表情，摄影机缓慢平稳微推聚焦，无文字、无字幕、无水印。"
+                )
+            p_img = hdr + "\n".join(sub_prompts)
+            p_vid = hdr + "可直接复制上方每张卡片提示词在即梦/可灵勾选【9:16 竖屏 · 5秒】一段式文生视频直出。"
+        elif stype == "hero_hook":
+            hdr = _header_banner(ratio_txt, sc_dur, rec_sec, "无需传产品包装图")
+            p_img = hdr + (
+                f"商业写实电影摄影首帧，35mm 镜头浅景深，主题：{cat_tag}。"
+                f"自然通透的真实居家/生活光线，一位真实中国受众正经历「{title}」（{sub}），手部自然扶按对应部位，神情真实克制不浮夸，背景柔和虚化，无任何文字、无产品盒、无水印。"
             )
-            p_vid = (
-                f"真实 35mm 电影商拍质感，{max(3, round(float(sc.get('end', 4)) - float(sc.get('start', 0))))} 秒 16:9。"
-                f"延续首帧人物与光线，自然呈现「{title}」的真实动作与情绪微表情，"
-                f"镜头缓慢平稳微推，无字幕、无水印。"
+            p_vid = hdr + (
+                f"真实电影级商拍广告镜头，{rec_sec}秒。\n"
+                f"【0-1.6s】人物在自然生活场景中准备起身或迈步，因「{sub or title}」动作出现真实停顿迟疑；\n"
+                f"【1.6-{rec_sec}.0s】双手自然扶住并轻揉不适部位，眉头微蹙轻轻叹气，摄影机沿痛点方向平稳缓慢微推，光影柔和高级，无字幕、无水印。"
+            )
+        elif stype == "proof_spec":
+            hdr = _header_banner(ratio_txt, sc_dur, rec_sec, "必传【官方外盒正斜视图 + 内袋/瓶身图 + 膏体/内容物实拍图】开启多主体参考")
+            tone = "冰蓝与纯白渐变科技光学玻璃展台" if category in ("medical_device", "blue_hat") else (
+                "温润香槟金与高透亚克力水波纹高奢展台" if category == "skincare" else "清晨阳光通透的原木与浅米洞石自然展台"
+            )
+            p_img = hdr + (
+                f"高端商业广告产品静物大片，{tone}。画面黄金三角层次陈列参考图中的「{prod_name}」官方外盒、独立内包装与真实内容物主体，"
+                f"严格保持参考图包装上的品牌标志与全部中文排版 100% 清晰锐利零变形，细腻轮廓棚拍光与通透倒影，浅景深商业质感，无杂物无水印。"
+            )
+            p_vid = hdr + (
+                f"高端 TVC 产品高光出场镜头，{rec_sec}秒（建议选 60fps 高帧率模式）。\n"
+                f"【0-1.8s】明亮通透的{tone}上，「{prod_name}」外盒稳立左后方，内袋与产品本体在前景呈立体层次优雅微浮展开；\n"
+                f"【1.8-{rec_sec}.0s】一道柔和纯净的暖金与冰蓝丝绸流光从左向右缓缓掠过盒面与产品肌理，空气中漂浮极细腻微光粒子，摄影机以微距轨道平稳缓慢推进并轻微环绕，全程保持包装中文清晰稳定不变形，无字幕无水印。"
             )
         elif stype == "data_hud":
-            p_img = (
-                f"高端医学/科研级极简商业可视化摄影，深蓝青或深墨绿科技质感背景。"
-                f"围绕「{title}」（{sub}）呈现清晰通透的核心机理/结构透视视觉主体，柔和边缘发光，"
-                f"主体居中留出上下排版安全区，无任何文字、无数字、无水印。"
+            hdr = _header_banner(ratio_txt, sc_dur, rec_sec, "无需传包装图（纯 3D 微距科研渲染）")
+            p_img = hdr + (
+                f"C4D Octane 渲染器级别 3D 超微距科研剖面大片，冰蓝与暖金交织光学质感。35 度斜俯超微距视角，"
+                f"立体分层拆解展示「{title}」（{sub}）的精密微观结构与晶莹活性阵列，上方悬浮发光能量核心释放纳米级微粒，近景锐利远景虚化，无任何文字、无数字、无水印。"
             )
-            p_vid = ""
-        elif stype == "split_contrast":
-            p_img = (
-                f"极简商业棚拍静物，1:1 方图纯白或浅灰背景。呈现无任何品牌文字与图案的纯白/素色对照单品，"
-                f"用于与「{prod_name}」做对比（痛点归因：{title} / {sub}）。柔和漫反射棚拍光，无文字无水印。"
+            p_vid = hdr + (
+                f"高端广告级 3D 超微距 CG 动画，{rec_sec}秒，细节饱满递进：\n"
+                f"【0-1.8s】画面上方晶莹能量核心柔和脉动，释放细腻闪烁的暖金色活性微粒如星云般渗入下方多层微观结构；\n"
+                f"【1.8-3.6s】摄影机以超微距低角度贴近微观阵列平稳向前滑行推进，底层亮起温暖呼吸光波，洁白透气丝流从微孔间轻盈升腾逸出；\n"
+                f"【3.6-{rec_sec}.0s】整片微观结构随柔韧基底轻微起伏舒展，表面泛起温润光学折射涟漪，运镜丝滑连贯，全程无文字无水印。"
             )
-            p_vid = ""
-        elif stype == "orbit_cards":
-            items_txt = "、".join([str(it.get("title") or it) for it in (sc.get("items") or []) if it])
-            p_img = (
-                f"高端商业杂志微距棚拍摄影，1:1 方图纯白底（#FFFFFF），风格统一。"
-                f"围绕「{title}」（{items_txt or sub}）拍摄洁净通透的核心成分/天然原料静物，"
-                f"主体居中占画幅 65%–70%，柔和暖白棚拍光，无地面重阴影、无文字、无水印。"
-            )
-            p_vid = ""
-        elif stype == "proof_spec":
-            p_img = (
-                f"【官方原图规范】本幕「{title}」请直接使用「{prod_name}」官方高清原图（产品瓶/盒、品牌 Logo、认证标识或检测报告原图），"
-                f"切勿使用 AI 重绘包装文字，确保 100% 真实合规。"
-            )
-            p_vid = ""
-        elif stype == "brand_finale":
-            p_img = (
-                f"真实高端商业广告实景背景摄影，16:9 横屏。明亮通透的现代温暖场景，清晨柔和阳光洒在前景浅米色洞石"
-                f"或温润原木桌面上，大光圈 f/1.8 奶油虚化背景，前景桌面中央留出干净空位便于合成「{prod_name}」官方盒瓶原图。"
-                f"纯摄影背景，无人物、无产品包装、无文字、无水印。"
-            )
-            p_vid = ""
         else:
-            p_img = (
-                f"高端商业电商主图摄影，16:9 宽银幕。围绕「{title}」（{sub or vo}），展现「{prod_name}」的真实使用氛围与质感，"
-                f"光线高级通透，画面留出标题安全区，无文字、无水印。"
+            hdr = _header_banner(ratio_txt, sc_dur, rec_sec, "按需参考产品内容物图")
+            p_img = hdr + (
+                f"高端三维可视化/商业实拍大片，明亮纯净柔光背景。围绕「{title}」（{sub or vo}）直观展现修护渗透与舒缓后的轻松健康状态，光影干净通透，无血腥恐怖感，无文字无水印。"
             )
-            p_vid = ""
+            p_vid = hdr + (
+                f"高端商业广告动态镜头，{rec_sec}秒。\n"
+                f"【0-2.0s】温润暖金能量流持续深入目标部位，紧绷泛红感柔和消退；\n"
+                f"【2.0-{rec_sec}.0s】主体恢复洁白温润的舒展活力状态，动作自然顺畅轻盈，摄影机缓慢平稳推进，无字幕无水印。"
+            )
 
         packs.append({
             "id": sc.get("id", f"s{idx + 1:02d}"),
-            "group": f"{group}（{badge or sc.get('id', '')}）",
-            "title": f"第 {idx + 1} 幕 · {title}",
-            "ratio": ratio,
+            "group": f"{group}（{sc.get('id', '')}）",
+            "title": f"第 {idx + 1} 镜 · {title}（{st:.1f}–{en:.1f}s，共 {sc_dur:.1f}s）",
+            "ratio": f"{ratio_txt} · 选 {rec_sec}s",
             "recommended_model": model,
             "prompt_image": p_img,
             "prompt_video": p_vid,
@@ -99,100 +153,6 @@ def _build_dynamic_prompts(cfg: dict) -> list[dict]:
 
 
 def build_prompt_pack(cfg: dict) -> list[dict]:
-    if cfg.get("template_mode") == "dynamic" or cfg.get("scenes"):
+    if cfg.get("template_mode") in ("dynamic", "ref_frame") or cfg.get("scenes"):
         return _build_dynamic_prompts(cfg)
-
-    brand = cfg.get("brand", {})
-    pains = cfg.get("pain_points", {})
-    nutr = cfg.get("nutrients", {})
-
-    cat = brand.get("category_tag", "中老年健康养护")
-    p1 = pains.get("pain1_tag", "上下楼梯关节疼、腿疼")
-    p2 = pains.get("pain2_tag", "腰疼直不起来")
-    p3 = pains.get("pain3_title", "夜间腿脚经常抽筋")
-
-    c1 = nutr.get("card1_analogy", "深海鲨鱼软骨")
-    c2 = nutr.get("card2_analogy", "鲜牛奶")
-    c3 = nutr.get("card3_analogy", "新鲜鸡蛋黄")
-    c4 = nutr.get("card4_analogy", "鲜炖葛根")
-
-    return [
-        {
-            "id": "01_pain1_frame",
-            "group": "痛点实拍首帧 + 图生视频（16:9）",
-            "title": f"痛点 1：{p1}",
-            "ratio": "16:9",
-            "recommended_model": "gemini-3.1-flash-image / 即梦 / 可灵",
-            "prompt_image": (
-                f"16:9 宽银幕 35mm 电影商业摄影质感，主题：{cat}。"
-                f"一位 60 岁左右的真实中国中老年男性，身穿柔和米色针织开衫，在温暖晨光洒入的居家木质楼梯上缓慢上楼，"
-                f"一手紧握扶手，另一手轻按膝盖，神情真实克制、体现「{p1}」的不适感。"
-                f"现代温馨中式室内背景柔和虚化，浅景深，自然皮肤质感，无文字，无 Logo，无水印。"
-            ),
-            "prompt_video": (
-                f"真实 35mm 电影商拍质感，5 秒 16:9。老人紧握楼梯扶手上楼时微微停顿，皱眉低头轻按揉膝盖，体现「{p1}」。"
-                f"镜头极缓慢平稳微推，窗外晨光自然柔和，动作克制自然不夸张，无字幕无水印。"
-            ),
-        },
-        {
-            "id": "02_pain2_frame",
-            "group": "痛点实拍首帧 + 图生视频（16:9）",
-            "title": f"痛点 2：{p2}",
-            "ratio": "16:9",
-            "recommended_model": "gemini-3.1-flash-image / 即梦 / 可灵",
-            "prompt_image": (
-                f"16:9 宽银幕 35mm 电影商业摄影质感。一位 58 岁左右的真实中国女性，身穿柔和鼠尾草绿针织毛衣，"
-                f"站在阳光洒满的中国家庭客厅木桌旁，一手扶桌沿，另一手轻扶后腰，面露克制真实的「{p2}」僵硬神情。"
-                f"清晨柔和窗光透过白纱窗帘，浅景深虚化，无文字，无 Logo，无水印。"
-            ),
-            "prompt_video": (
-                f"真实 35mm 电影商拍质感，5 秒 16:9。阿姨扶着木桌边缘缓缓起身，另一只手扶住后腰轻轻按压揉动，微微皱眉轻叹，"
-                f"镜头极缓慢平稳微推，晨光柔和自然，无字幕无水印。"
-            ),
-        },
-        {
-            "id": "03_pain3_video",
-            "group": "痛点实拍首帧 + 图生视频（16:9）",
-            "title": f"痛点 3：{p3}",
-            "ratio": "16:9",
-            "recommended_model": "可灵 / 即梦 / Seedance / Google Flow",
-            "prompt_image": (
-                f"16:9 宽银幕 35mm 电影商业摄影质感。深夜温馨的中国家庭卧室，床头一盏暖黄色台灯柔和亮着。"
-                f"一位 60 岁左右穿着素雅浅灰棉质睡衣的中国老人坐在床沿，微皱眉头俯身轻握揉按小腿与脚踝，体现「{p3}」。"
-                f"浅景深虚化，光线温暖克制不昏暗，无文字，无水印。"
-            ),
-            "prompt_video": (
-                f"真实 35mm 电影商拍质感，5 秒 16:9。深夜暖黄台灯卧室，穿浅灰睡衣的老人坐在床沿微皱眉头，"
-                f"双手紧握并轻轻揉按抽筋的小腿肚和脚踝，镜头极缓慢平稳微推，光线温暖写实，无字幕无水印。"
-            ),
-        },
-        {
-            "id": "04_tabletop_bg",
-            "group": "大牌产品实景背景（16:9）",
-            "title": "暖阳洞石/原木客厅桌面背景",
-            "ratio": "16:9",
-            "recommended_model": "GPT Image (gpt-image-1) / Midjourney / 即梦",
-            "prompt_image": (
-                "真实高端商业广告实景背景摄影，16:9 横屏。明亮通透的现代温暖客厅，清晨柔和阳光透过亚麻白纱窗帘洒在前景浅米色洞石"
-                "与温润橡木桌面上，大光圈 f/1.8 奶油虚化背景，前景桌面中央与中下部留出大面积干净空位便于摆放产品盒瓶。"
-                "纯摄影画面，无人物、无产品包装、无文字、无水印。"
-            ),
-            "prompt_video": "",
-        },
-        {
-            "id": "05_ingredient_macros",
-            "group": "营养类比与核心成分静物（1:1 纯白底）",
-            "title": f"四组核心营养静物（{c1} / {c2} / {c3} / {c4}）",
-            "ratio": "1:1",
-            "recommended_model": "GPT Image (gpt-image-1) / 即梦",
-            "prompt_image": (
-                f"高端营养杂志商业微距棚拍摄影，1:1 方图，风格统一。主体分别拍摄：\n"
-                f"1) {c1}：盛放在极简哑光白瓷浅碟中，洁净通透带自然光泽；\n"
-                f"2) {c2}：极简透明玻璃杯盛装，质感温润洁净；\n"
-                f"3) {c3}：盛放在极简浅口白瓷碟中，光泽饱满温润；\n"
-                f"4) {c4}：新鲜切片搭配两片嫩绿草本叶，呈现温和东方草本科研质感。\n"
-                f"通用约束：柔和暖白漫反射棚拍光，完全隔离在纯平坦纯白背景（#FFFFFF）上，无地面阴影、无餐具、无文字、无水印，主体居中占画幅 65%–70%。"
-            ),
-            "prompt_video": "",
-        },
-    ]
+    return _build_dynamic_prompts(cfg)

@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>ecom-tvc-studio 2.0 · 多版式高定商业视频渲染引擎</title>
+<script>
+(function() {
+  const qs = new URLSearchParams(location.search);
+  const pid = qs.get('project') || 'baiyunshan-guanjietie';
+  const base = document.createElement('base');
+  base.href = '/projects/' + encodeURIComponent(pid) + '/';
+  document.head.appendChild(base);
+})();
+</script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1080px; height: 1920px; overflow: hidden;
+    background: #DCE7F8;
+    font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  #stage {
+    position: relative; width: 1080px; height: 1920px; overflow: hidden;
+    background: #DCE7F8;
+  }
+  #stage.landscape {
+    width: 1920px; height: 1080px; background: #0B1324;
+  }
+
+  /* ============ 1. TOP FIXED HEADER ============ */
+  #top-band {
+    position: absolute; left: 0; top: 0; width: 1080px; height: 596px; z-index: 40;
+    background: linear-gradient(180deg, #EEF4FD 0%, #D6E3F7 100%);
+    border-bottom: 3px solid rgba(15, 58, 148, 0.16);
+    box-shadow: 0 8px 24px rgba(10, 36, 94, 0.10);
+    overflow: hidden;
+  }
+  #top-ribbon-svg {
+    position: absolute; left: 0; top: 0; width: 1080px; height: 164px; pointer-events: none;
+  }
+  #top-logo-wrap {
+    position: absolute; left: 38px; top: 26px; z-index: 5;
+    display: flex; align-items: center; gap: 16px;
+  }
+  #top-logo {
+    height: 78px; width: auto;
+    filter: drop-shadow(0 4px 10px rgba(0, 18, 60, 0.35));
+  }
+  #top-device-tag {
+    position: absolute; right: 30px; top: 42px; z-index: 5;
+    padding: 9px 22px; border-radius: 999px;
+    background: rgba(11, 48, 130, 0.10);
+    border: 1.5px solid rgba(11, 48, 130, 0.25);
+    color: #0B3082; font-size: 24px; font-weight: 800; letter-spacing: 0.03em;
+  }
+  #top-headline {
+    position: absolute; left: 28px; right: 28px; top: 222px;
+    text-align: center; font-size: 94px; font-weight: 900;
+    line-height: 1.12; letter-spacing: -0.015em;
+    text-shadow: 0 3px 0 rgba(255,255,255,0.88);
+    white-space: nowrap;
+  }
+  #top-subline {
+    position: absolute; left: 40px; right: 40px; top: 398px;
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    font-size: 52px; font-weight: 800; color: #262E3D; letter-spacing: 0.04em;
+  }
+
+  /* ============ 2. DYNAMIC VIEWPORT (Three-Band 16:9 / 4:3 OR Fullscreen) ============ */
+  #viewport {
+    position: absolute; left: 0; top: 596px; width: 1080px; height: 608px;
+    z-index: 20; overflow: hidden; background: #0E1726; cursor: crosshair;
+  }
+  .vp-scene-layer {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    overflow: hidden; transform-origin: center center;
+    will-change: transform, opacity;
+  }
+  .vp-fill {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; object-position: center;
+    transform-origin: center center;
+  }
+  #vp-vignette {
+    position: absolute; inset: 0; z-index: 26; pointer-events: none;
+    background: linear-gradient(180deg, rgba(6,16,38,0.18) 0%, transparent 16%, transparent 70%, rgba(4,10,24,0.62) 100%);
+  }
+  #vp-pain-edge {
+    position: absolute; inset: 0; z-index: 27; pointer-events: none; opacity: 0;
+    box-shadow: inset 0 0 68px rgba(228, 28, 28, 0.55);
+  }
+  #vp-flash {
+    position: absolute; inset: 0; z-index: 38; pointer-events: none; opacity: 0;
+    background: radial-gradient(circle at 50% 48%, #FFFFFF 0%, #E8F3FF 45%, rgba(190, 224, 255, 0.85) 100%);
+    mix-blend-mode: screen;
+  }
+  #vp-sub-stage {
+    position: absolute; left: 28px; right: 28px; bottom: 16px; z-index: 35;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    pointer-events: none;
+  }
+
+  /* Differentiated Subtitle Styles */
+  .sub-pain-q {
+    font-size: 40px; font-weight: 900; color: #FFFFFF;
+    letter-spacing: 0.03em; line-height: 1.3;
+    text-shadow:
+      -2px -2px 0 #111622, 2px -2px 0 #111622,
+      -2px  2px 0 #111622, 2px  2px 0 #111622,
+       0px  5px 14px rgba(0,0,0,0.85);
+  }
+  .sub-pain-q .kw-gold {
+    display: inline-block; margin: 0 8px;
+    font-size: 50px; font-weight: 900; color: #FFD54F;
+    text-shadow:
+      -2.5px -2.5px 0 #161006, 2.5px -2.5px 0 #161006,
+      -2.5px  2.5px 0 #161006, 2.5px  2.5px 0 #161006,
+       0px 5px 16px rgba(255, 115, 0, 0.85);
+  }
+  .sub-stomp-row {
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+  }
+  .stomp-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 24px; border-radius: 12px;
+    background: linear-gradient(135deg, #E31C1C 0%, #960B0B 100%);
+    border: 2px solid rgba(255, 226, 158, 0.88);
+    color: #FFFFFF; font-size: 36px; font-weight: 900; letter-spacing: 0.04em;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.62), 0 0 18px rgba(255, 48, 36, 0.42);
+    transform-origin: center center;
+  }
+  .sub-urgent-wrap {
+    display: inline-flex; flex-direction: column; align-items: center;
+  }
+  .sub-urgent-line {
+    font-size: 42px; font-weight: 900; color: #FFFFFF; letter-spacing: 0.04em;
+    text-shadow:
+      -2px -2px 0 #101520, 2px -2px 0 #101520,
+      -2px  2px 0 #101520, 2px  2px 0 #101520,
+       0px  5px 14px rgba(0,0,0,0.88);
+  }
+  .sub-urgent-line .kw-red {
+    display: inline-block; margin-left: 8px;
+    font-size: 52px; font-weight: 900; color: #FF3B30;
+    text-shadow:
+      -2.5px -2.5px 0 #FFFFFF, 2.5px -2.5px 0 #FFFFFF,
+      -2.5px  2.5px 0 #FFFFFF, 2.5px  2.5px 0 #FFFFFF,
+       0px 6px 16px rgba(220, 20, 20, 0.75);
+  }
+  .sub-urgent-bar {
+    margin-top: 6px; height: 6px; border-radius: 999px;
+    background: linear-gradient(90deg, rgba(255,70,50,0.15) 0%, #FF3B30 45%, #FFD60A 100%);
+    box-shadow: 0 0 14px rgba(255, 59, 48, 0.85);
+  }
+  .sub-pro-glass {
+    display: inline-block; padding: 10px 32px; border-radius: 999px;
+    background: linear-gradient(90deg, rgba(7, 26, 72, 0.82) 0%, rgba(13, 49, 126, 0.90) 50%, rgba(7, 26, 72, 0.82) 100%);
+    border: 1.5px solid rgba(164, 208, 255, 0.52);
+    box-shadow: 0 8px 24px rgba(2, 10, 30, 0.52);
+    color: #FFFFFF; font-size: 36px; font-weight: 800; letter-spacing: 0.03em; line-height: 1.3;
+  }
+  .sub-pro-glass .kw-hl {
+    color: #FFE082; font-weight: 900;
+    text-shadow: 0 2px 8px rgba(255, 190, 40, 0.35);
+  }
+
+  /* ============ 3. BOTTOM FIXED FOOTER ============ */
+  #bot-band {
+    position: absolute; left: 0; top: 1204px; width: 1080px; height: 716px; z-index: 40;
+    background: linear-gradient(180deg, #E6EFFC 0%, #CEDDF5 86%, #0D3688 100%);
+    border-top: 3px solid rgba(255, 255, 255, 0.88);
+    overflow: hidden;
+  }
+  #dna-bg {
+    position: absolute; left: -20px; bottom: 32px; width: 540px; height: 350px;
+    opacity: 0.22; pointer-events: none;
+  }
+  #bot-copy {
+    position: absolute; left: 38px; top: 205px; width: 590px; z-index: 6;
+  }
+  #bot-line1 {
+    font-size: 58px; font-weight: 900; line-height: 1.24; letter-spacing: 0.01em;
+    text-shadow: 0 2px 0 rgba(255,255,255,0.85);
+    white-space: nowrap;
+  }
+  #bot-line2 {
+    margin-top: 20px;
+    font-size: 64px; font-weight: 900; color: #0A2E7A;
+    line-height: 1.22; letter-spacing: 0.01em;
+    text-shadow: 0 2px 0 rgba(255,255,255,0.85);
+    white-space: nowrap;
+  }
+  #podium {
+    position: absolute; right: 16px; bottom: 46px; width: 460px; height: 96px; z-index: 4;
+    background: linear-gradient(180deg, #EEF4FF 0%, #BFD3F6 26%, #1849AC 55%, #0A2B73 100%);
+    border-radius: 14px 14px 6px 6px;
+    box-shadow: 0 12px 28px rgba(8, 30, 84, 0.38), inset 0 3px 0 #FFFFFF;
+    transform: perspective(500px) rotateX(12deg);
+  }
+  #bot-box-wrap {
+    position: absolute; right: 32px; bottom: 104px; height: 536px; z-index: 8;
+  }
+  #bot-box {
+    height: 536px; width: auto; display: block;
+    filter: drop-shadow(0 18px 28px rgba(9, 32, 82, 0.34));
+  }
+  #bot-box-sheen {
+    position: absolute; inset: 0; overflow: hidden; pointer-events: none; border-radius: 10px;
+  }
+  #bot-box-sheen-bar {
+    position: absolute; top: -20%; left: -60%; width: 42%; height: 140%;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.34) 50%, transparent 100%);
+    transform: skewX(-22deg);
+  }
+  #compliance-strip {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 42px; z-index: 50;
+    background: #082766; color: rgba(255, 255, 255, 0.92);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px; font-weight: 600; letter-spacing: 0.03em;
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <!-- 1. Top Fixed Band -->
+  <div id="top-band">
+    <svg id="top-ribbon-svg" viewBox="0 0 1080 150" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="ribGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#072B88" />
+          <stop offset="55%" stop-color="#1450C8" />
+          <stop offset="100%" stop-color="#1E64E0" />
+        </linearGradient>
+      </defs>
+      <path d="M0,0 L1080,0 L1080,22 L450,22 L385,118 L0,118 Z" fill="url(#ribGrad)" />
+      <path d="M900,0 L1080,0 L1080,120 Q995,95 940,22 Z" fill="rgba(255,255,255,0.45)" />
+    </svg>
+    <div id="top-logo-wrap">
+      <img id="top-logo" src="assets/official/baiyunshan_logo.png" onerror="this.style.display='none'" />
+    </div>
+    <div id="top-device-tag">二类医疗器械 · 外用</div>
+
+    <div id="top-headline">
+      <span id="th-left" style="color:#121722;">膝盖疼痛</span>
+      <span id="th-right" style="color:#DC1B1B; margin-left:22px;">半月板损伤</span>
+    </div>
+
+    <div id="top-subline">
+      <svg id="top-cross-svg" width="48" height="48" viewBox="0 0 48 48" style="flex-shrink:0; filter:drop-shadow(0 4px 8px rgba(216,28,28,0.35));">
+        <g transform="rotate(-10 24 24)">
+          <rect x="18" y="5" width="12" height="38" rx="4" fill="#E02020" />
+          <rect x="5" y="18" width="38" height="12" rx="4" fill="#F23838" />
+        </g>
+      </svg>
+      <span id="th-sub">根源修复 源头解决</span>
+    </div>
+  </div>
+
+  <!-- 2. Dynamic Viewport -->
+  <div id="viewport">
+    <div id="vp-layer-prev" class="vp-scene-layer" style="z-index:10; display:none;"></div>
+    <div id="vp-layer-cur" class="vp-scene-layer" style="z-index:15;"></div>
+    <div id="vp-vignette"></div>
+    <div id="vp-pain-edge"></div>
+    <div id="vp-flash"></div>
+    <div id="vp-sub-stage"></div>
+  </div>
+
+  <!-- 3. Bottom Fixed Band -->
+  <div id="bot-band">
+    <svg id="dna-bg" viewBox="0 0 500 300" fill="none">
+      <path d="M-20,260 C90,120 210,290 340,140 C410,60 470,120 520,80" stroke="#2D5FB8" stroke-width="5" />
+      <path d="M-20,180 C100,290 220,100 350,230 C420,295 470,190 520,220" stroke="#4D7FD6" stroke-width="5" />
+      <line x1="45" y1="205" x2="55" y2="230" stroke="#3B6EC8" stroke-width="3" />
+      <line x1="105" y1="190" x2="115" y2="235" stroke="#3B6EC8" stroke-width="3" />
+      <line x1="165" y1="202" x2="170" y2="182" stroke="#3B6EC8" stroke-width="3" />
+      <line x1="230" y1="215" x2="235" y2="165" stroke="#3B6EC8" stroke-width="3" />
+      <line x1="295" y1="185" x2="300" y2="195" stroke="#3B6EC8" stroke-width="3" />
+      <line x1="360" y1="135" x2="365" y2="235" stroke="#3B6EC8" stroke-width="3" />
+    </svg>
+
+    <div id="bot-copy">
+      <div id="bot-line1">
+        <span id="bl1-red" style="color:#DC1B1B;">膝盖问题</span>
+        <span id="bl1-blue" style="color:#0A2E7A; margin-left:20px;">专贴专用</span>
+      </div>
+      <div id="bot-line2">横扫疼痛反复难题</div>
+    </div>
+
+    <div id="podium"></div>
+    <div id="bot-box-wrap">
+      <img id="bot-box" src="assets/official/box_right_tilt_cut.png" onerror="this.src='assets/official/product_combo_cut.png'" />
+      <div id="bot-box-sheen"><div id="bot-box-sheen-bar"></div></div>
+    </div>
+  </div>
+  <div id="compliance-strip">晋械注准20242090118 ｜ 请仔细阅读产品说明书或者在医务人员的指导下购买和使用</div>
+</div>
+
+<script>
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, x) => a + (b - a) * x;
+const easeOutCubic = x => 1 - Math.pow(1 - clamp(x), 3);
+const easeInOutCubic = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const easeOutBack = x => {
+  const c1 = 1.70158, c3 = c1 + 1;
+  const u = clamp(x) - 1;
+  return 1 + c3 * u * u * u + c1 * u * u;
+};
+
+window.__STUDIO_CFG = null;
+let vpW = 1080, vpH = 608;
+const layerKeys = { cur: null, prev: null };
+const slot404 = {};
+
+function esc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function splitSubtitles(voText) {
+  const raw = String(voText || '').trim();
+  if (!raw) return [];
+  const parts = raw.split(/[，。！？；、,\n]+/).map(s => s.trim()).filter(Boolean);
+  return parts.length ? parts : [raw];
+}
+
+// Click-to-Pick coordinate helper for Web Studio
+document.getElementById('viewport').addEventListener('click', (ev) => {
+  const rect = ev.currentTarget.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  const xPct = Number((((ev.clientX - rect.left) / rect.width) * 100).toFixed(1));
+  const yPct = Number((((ev.clientY - rect.top) / rect.height) * 100).toFixed(1));
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'pickCoord', x: xPct, y: yPct }, '*');
+  }
+});
+
+function loadSrcSafe(url) {
+  return new Promise(resolve => {
+    const im = new Image();
+    im.onload = () => resolve(true);
+    im.onerror = () => resolve(false);
+    im.src = url;
+  });
+}
+
+async function setClipFrame(imgEl, slot, frameIdx, fallbackMedia, maxFrames) {
+  if (!imgEl) return;
+  if (slot && !slot404[slot]) {
+    const maxF = parseInt(maxFrames || 0, 10);
+    const safeIdx = maxF > 0 ? Math.min(maxF, Math.max(1, frameIdx)) : Math.max(1, frameIdx);
+    const fn = `assets/clips/${slot}/f_${String(safeIdx).padStart(4, '0')}.jpg`;
+    if (imgEl.dataset.cur === fn) return;
+    const ok = await loadSrcSafe(fn);
+    if (ok) {
+      imgEl.dataset.cur = fn;
+      imgEl.src = fn;
+      imgEl.style.display = 'block';
+      return;
+    }
+    if (safeIdx === 1) {
+      slot404[slot] = true;
+    } else {
+      const f1 = `assets/clips/${slot}/f_0001.jpg`;
+      const ok1 = await loadSrcSafe(f1);
+      if (ok1) {
+        if (!imgEl.dataset.cur) {
+          imgEl.dataset.cur = f1;
+          imgEl.src = f1;
+        }
+        return;
+      }
+      slot404[slot] = true;
+    }
+  }
+  if (fallbackMedia && imgEl.dataset.cur !== fallbackMedia) {
+    const okFb = await loadSrcSafe(fallbackMedia);
+    if (okFb) {
+      imgEl.dataset.cur = fallbackMedia;
+      imgEl.src = fallbackMedia;
+      imgEl.style.display = 'block';
+    }
+  }
+}
+
+function buildAnchorFXSvg(prefix, fx) {
+  if (!fx) return '';
+  const style = fx.style || 'pain';
+  if (style === 'skin_target') {
+    return `
+      <svg id="${prefix}-pain-svg" viewBox="0 0 ${vpW} ${vpH}" width="${vpW}" height="${vpH}" style="position:absolute; inset:0; z-index:18; pointer-events:none;">
+        <g id="${prefix}-pain-g">
+          <circle id="${prefix}-pain-r1" cx="0" cy="0" r="52" fill="none" stroke="rgba(255,232,175,0.9)" stroke-width="2.5" stroke-dasharray="10 8" />
+          <path d="M-64,-40 L-64,-64 L-40,-64 M40,-64 L64,-64 L64,-40 M64,40 L64,64 L40,64 M-40,64 L-64,64 L-64,40" fill="none" stroke="#FFF8E1" stroke-width="3.5" stroke-linecap="round" />
+          <circle cx="0" cy="0" r="5" fill="#FFE082" />
+        </g>
+      </svg>`;
+  }
+  if (style === 'vital_glow') {
+    return `
+      <svg id="${prefix}-pain-svg" viewBox="0 0 ${vpW} ${vpH}" width="${vpW}" height="${vpH}" style="position:absolute; inset:0; z-index:18; pointer-events:none; mix-blend-mode:screen;">
+        <defs>
+          <radialGradient id="${prefix}-vital-grad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="rgba(120, 255, 185, 0.72)" />
+            <stop offset="55%" stop-color="rgba(255, 214, 92, 0.35)" />
+            <stop offset="100%" stop-color="rgba(120, 255, 185, 0)" />
+          </radialGradient>
+        </defs>
+        <g id="${prefix}-pain-g">
+          <circle id="${prefix}-pain-core" cx="0" cy="0" r="88" fill="url(#${prefix}-vital-grad)" />
+          <circle id="${prefix}-pain-r1" cx="0" cy="0" r="42" fill="none" stroke="#80CBC4" stroke-width="3.5" />
+        </g>
+      </svg>`;
+  }
+  return `
+    <svg id="${prefix}-pain-svg" viewBox="0 0 ${vpW} ${vpH}" width="${vpW}" height="${vpH}" style="position:absolute; inset:0; z-index:18; pointer-events:none; mix-blend-mode:screen;">
+      <defs>
+        <radialGradient id="${prefix}-pain-grad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(255, 42, 28, 0.82)" />
+          <stop offset="42%" stop-color="rgba(255, 94, 26, 0.45)" />
+          <stop offset="75%" stop-color="rgba(255, 148, 36, 0.14)" />
+          <stop offset="100%" stop-color="rgba(255, 60, 30, 0)" />
+        </radialGradient>
+      </defs>
+      <g id="${prefix}-pain-g">
+        <circle id="${prefix}-pain-core" cx="0" cy="0" r="92" fill="url(#${prefix}-pain-grad)" />
+        <circle id="${prefix}-pain-r1" cx="0" cy="0" r="36" fill="none" stroke="#FF3B30" stroke-width="4.5" />
+        <circle id="${prefix}-pain-r2" cx="0" cy="0" r="64" fill="none" stroke="#FF9500" stroke-width="3" stroke-dasharray="14 10" />
+        <g id="${prefix}-pain-spikes">
+          ${Array.from({length: 8}).map((_, k) => `<line x1="38" y1="0" x2="62" y2="0" stroke="#FFD60A" stroke-width="3.2" stroke-linecap="round" transform="rotate(${k * 45})" />`).join('')}
+        </g>
+      </g>
+    </svg>`;
+}
+
+function buildSceneHTML(sc, prefix) {
+  const mode = sc.vp_mode || 'clip';
+
+  // VFX Component 3: Before/After Glowing Laser Scan Wipe
+  if (mode === 'wipe_compare' || sc.wipe_compare) {
+    const wc = sc.wipe_compare || {};
+    return `
+      <div style="position:absolute; inset:0; background:#0E1728; overflow:hidden;">
+        <img id="${prefix}-wipe-before" class="vp-fill" />
+        <div id="${prefix}-wipe-after-wrap" style="position:absolute; inset:0; overflow:hidden; clip-path:inset(0 50% 0 0);">
+          <img id="${prefix}-wipe-after" class="vp-fill" />
+        </div>
+        <div id="${prefix}-wipe-line" style="position:absolute; top:0; bottom:0; left:50%; width:4px; background:linear-gradient(180deg, #90CAF9, #FFFFFF, #FFE082); box-shadow:0 0 22px #82B1FF, 0 0 8px #FFFFFF; z-index:22;"></div>
+        <div style="position:absolute; left:24px; top:20px; z-index:24; padding:6px 20px; border-radius:999px; background:rgba(10,38,98,0.85); border:1.5px solid #FFE082; color:#FFE082; font-size:24px; font-weight:800;">${esc(wc.after_label || '修护后')}</div>
+        <div style="position:absolute; right:24px; top:20px; z-index:24; padding:6px 20px; border-radius:999px; background:rgba(18,24,36,0.78); border:1.5px solid rgba(255,255,255,0.35); color:#E0E6F0; font-size:24px; font-weight:800;">${esc(wc.before_label || '修护前')}</div>
+      </div>`;
+  }
+
+  // VFX Component 4: 3D Floating Center-Stage Spotlight Carousel (Coverflow)
+  if (mode === 'coverflow3' || mode === 'split3') {
+    const cols = Array.isArray(sc.items) && sc.items.length >= 3 ? sc.items.slice(0, 3) : [
+      { title: '中老年关节痛', desc: '膝盖酸胀 · 上下楼费力', frame_slot: 's4_1', clip_frames: 175, px: 43, py: 66 },
+      { title: '运动关节劳损', desc: '跑步健身 · 膝盖酸痛', frame_slot: 's4_2', clip_frames: 202, px: 43, py: 77 },
+      { title: '日常跌打扭伤', desc: '运动扭伤 · 关节肿痛', frame_slot: 's4_3', clip_frames: 175, px: 58, py: 68 },
+    ];
+    return `
+      <div style="position:absolute; inset:0; overflow:hidden; background:radial-gradient(circle at 50% 42%, #1C458F 0%, #0B1F4A 58%, #061028 100%); perspective:1100px;">
+        <div style="position:absolute; left:50%; bottom:46px; width:760px; height:140px; transform:translateX(-50%); border-radius:50%; background:radial-gradient(ellipse at center, rgba(100,175,255,0.28) 0%, rgba(30,90,200,0.08) 55%, transparent 75%); pointer-events:none;"></div>
+        ${sc.badge ? `
+          <div style="position:absolute; left:50%; top:10px; transform:translateX(-50%); z-index:45; padding:4px 26px; border-radius:999px; background:linear-gradient(90deg, rgba(8,30,84,0.90), rgba(20,68,158,0.94), rgba(8,30,84,0.90)); border:1.5px solid rgba(255,224,130,0.82); color:#FFFFFF; font-size:24px; font-weight:900; letter-spacing:0.10em; box-shadow:0 6px 18px rgba(0,0,0,0.42);">
+            <span style="color:#FFD54F; margin-right:8px;">✦</span>${esc(sc.badge)}<span style="color:#FFD54F; margin-left:8px;">✦</span>
+          </div>` : ''}
+        <div style="position:absolute; inset:0; transform-style:preserve-3d;">
+          ${cols.map((c, ci) => `
+            <div id="${prefix}-cf-card-${ci}" style="position:absolute; left:50%; top:54px; width:384px; height:466px; margin-left:-192px; border-radius:20px; overflow:hidden; background:#0F1E3A; border:2.5px solid rgba(168,210,255,0.42); box-shadow:0 22px 48px rgba(0,0,0,0.62); transform-origin:center center; will-change:transform, filter, opacity;">
+              <img id="${prefix}-col-${ci}" class="vp-fill" style="object-position:center 18%;" />
+              <svg id="${prefix}-cf-pulse-${ci}" viewBox="0 0 384 466" width="384" height="466" style="position:absolute; inset:0; z-index:8; pointer-events:none; mix-blend-mode:screen; opacity:0;">
+                <defs>
+                  <radialGradient id="${prefix}-cf-pg-${ci}" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="rgba(255,48,32,0.80)" />
+                    <stop offset="55%" stop-color="rgba(255,115,30,0.35)" />
+                    <stop offset="100%" stop-color="rgba(255,60,30,0)" />
+                  </radialGradient>
+                </defs>
+                <g transform="translate(${((c.px ?? 50) * 3.84).toFixed(1)}, ${((c.py ?? 62) * 4.66).toFixed(1)})">
+                  <circle cx="0" cy="0" r="54" fill="url(#${prefix}-cf-pg-${ci})" />
+                  <circle id="${prefix}-cf-pr-${ci}" cx="0" cy="0" r="28" fill="none" stroke="#FF453A" stroke-width="3.5" />
+                </g>
+              </svg>
+              <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(6,16,38,0.06) 0%, transparent 52%, rgba(4,12,32,0.88) 100%); pointer-events:none; z-index:9;"></div>
+              <div id="${prefix}-cf-badge-${ci}" style="position:absolute; left:14px; right:14px; bottom:14px; z-index:12; padding:10px 16px; border-radius:14px; background:rgba(8,28,74,0.88); border:1.5px solid rgba(255,220,120,0.72); display:flex; align-items:center; gap:12px; box-shadow:0 8px 20px rgba(0,0,0,0.45);">
+                <div style="width:6px; height:36px; border-radius:99px; background:linear-gradient(180deg, #FFE082 0%, #FF5252 100%); flex-shrink:0;"></div>
+                <div style="display:flex; flex-direction:column; align-items:flex-start;">
+                  <span style="font-size:15px; font-weight:800; color:#FFD54F; letter-spacing:0.08em; line-height:1;">0${ci + 1} · 适用场景</span>
+                  <span style="font-size:28px; font-weight:900; color:#FFFFFF; letter-spacing:0.02em; line-height:1.2; margin-top:3px;">${esc(c.title || '')}</span>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+  }
+
+  const fx = sc.anchor_fx || sc.pain_fx;
+  const loupe = sc.pip_loupe;
+  const counter = sc.counter_badge;
+
+  let loupeHtml = '';
+  if (loupe) {
+    const lx = (parseFloat(loupe.loupe_x ?? 78) / 100) * vpW;
+    const ly = (parseFloat(loupe.loupe_y ?? 42) / 100) * vpH;
+    const tx = (parseFloat(loupe.target_x ?? 50) / 100) * vpW;
+    const ty = (parseFloat(loupe.target_y ?? 58) / 100) * vpH;
+    loupeHtml = `
+      <svg viewBox="0 0 ${vpW} ${vpH}" width="${vpW}" height="${vpH}" style="position:absolute; inset:0; z-index:20; pointer-events:none;">
+        <line x1="${tx.toFixed(1)}" y1="${ty.toFixed(1)}" x2="${lx.toFixed(1)}" y2="${ly.toFixed(1)}" stroke="rgba(255,224,130,0.85)" stroke-width="2.5" stroke-dasharray="6 5" />
+        <circle cx="${tx.toFixed(1)}" cy="${ty.toFixed(1)}" r="10" fill="none" stroke="#FFE082" stroke-width="3" />
+      </svg>
+      <div id="${prefix}-loupe-wrap" style="position:absolute; left:${(lx - 112).toFixed(1)}px; top:${(ly - 112).toFixed(1)}px; width:224px; height:224px; border-radius:50%; overflow:hidden; border:4px solid #FFE082; box-shadow:0 16px 38px rgba(0,0,0,0.65), 0 0 24px rgba(130,195,255,0.45); z-index:22; background:#0D1C3A;">
+        <img id="${prefix}-loupe-img" class="vp-fill" style="transform:scale(${parseFloat(loupe.zoom || 2.1).toFixed(2)});" />
+        ${loupe.label ? `<div style="position:absolute; left:0; right:0; bottom:12px; text-align:center;"><span style="padding:3px 12px; border-radius:999px; background:rgba(8,28,74,0.88); color:#FFE082; font-size:18px; font-weight:800;">${esc(loupe.label)}</span></div>` : ''}
+      </div>`;
+  }
+
+  let counterHtml = '';
+  if (counter) {
+    counterHtml = `
+      <div id="${prefix}-counter-box" style="position:absolute; right:28px; top:22px; z-index:23; padding:10px 22px; border-radius:16px; background:rgba(8,28,76,0.86); border:1.5px solid rgba(255,224,130,0.78); box-shadow:0 10px 26px rgba(0,0,0,0.45); text-align:right;">
+        <div id="${prefix}-counter-val" style="font-size:40px; font-weight:900; color:#FFE082; line-height:1.05;">0</div>
+        <div style="font-size:18px; font-weight:700; color:#CFE4FF; margin-top:2px;">${esc(counter.label || '')}</div>
+      </div>`;
+  }
+
+  return `
+    <div style="position:absolute; inset:0; background:#101A2B; overflow:hidden;">
+      <img id="${prefix}-img" class="vp-fill" />
+      ${buildAnchorFXSvg(prefix, fx)}
+      ${loupeHtml}
+      ${counterHtml}
+    </div>`;
+}
+
+async function updateSceneLayer(container, prefix, sc, localT) {
+  const dur = Math.max(0.3, parseFloat(sc.end || 3) - parseFloat(sc.start || 0));
+  const pScene = clamp(localT / dur);
+  const fx = sc.anchor_fx || sc.pain_fx;
+  const key = `${sc.id}_${sc.vp_mode || 'clip'}_${!!fx}_${!!sc.pip_loupe}_${!!sc.wipe_compare}_${vpW}x${vpH}`;
+  if (layerKeys[prefix] !== key) {
+    layerKeys[prefix] = key;
+    container.innerHTML = buildSceneHTML(sc, prefix);
+  }
+
+  const frameIdx = Math.floor(Math.max(0, localT) * 24) + 1;
+  const imgEl = document.getElementById(`${prefix}-img`);
+  if (imgEl) {
+    const slot = sc.frame_slot || sc.id;
+    await setClipFrame(imgEl, slot, frameIdx, sc.media || '', sc.clip_frames);
+    const dolly = lerp(1.000, 1.042, easeOutCubic(pScene));
+    imgEl.style.transform = `scale(${dolly.toFixed(4)})`;
+  }
+
+  // Update PIP Loupe if active
+  if (sc.pip_loupe) {
+    const lImg = document.getElementById(`${prefix}-loupe-img`);
+    const lWrap = document.getElementById(`${prefix}-loupe-wrap`);
+    if (lImg) {
+      const lSlot = sc.pip_loupe.frame_slot || sc.frame_slot || sc.id;
+      await setClipFrame(lImg, lSlot, frameIdx, sc.pip_loupe.media || sc.media || '', sc.pip_loupe.clip_frames || sc.clip_frames);
+    }
+    if (lWrap) {
+      const lp = easeOutBack(clamp((localT - 0.25) / 0.36));
+      lWrap.style.opacity = clamp((localT - 0.22) / 0.15).toFixed(3);
+      lWrap.style.transform = `scale(${lerp(0.4, 1.0, lp).toFixed(3)})`;
+    }
+  }
+
+  // Update Counter Badge if active
+  if (sc.counter_badge) {
+    const cVal = document.getElementById(`${prefix}-counter-val`);
+    if (cVal) {
+      const target = parseFloat(sc.counter_badge.value || 98);
+      const cur = target * easeOutCubic(clamp((localT - 0.15) / Math.min(1.6, dur * 0.55)));
+      const dec = Number.isInteger(target) ? 0 : 1;
+      cVal.textContent = `${sc.counter_badge.prefix || ''}${cur.toFixed(dec)}${sc.counter_badge.suffix || ''}`;
+    }
+  }
+
+  // Update Before/After Laser Wipe if active
+  if ((sc.vp_mode || '') === 'wipe_compare' || sc.wipe_compare) {
+    const wc = sc.wipe_compare || {};
+    const bImg = document.getElementById(`${prefix}-wipe-before`);
+    const aImg = document.getElementById(`${prefix}-wipe-after`);
+    const aWrap = document.getElementById(`${prefix}-wipe-after-wrap`);
+    const wLine = document.getElementById(`${prefix}-wipe-line`);
+    if (bImg) await setClipFrame(bImg, wc.before_slot || '', frameIdx, wc.before_media || sc.media || '', wc.clip_frames);
+    if (aImg) await setClipFrame(aImg, wc.after_slot || sc.frame_slot || sc.id, frameIdx, wc.after_media || sc.media || '', wc.clip_frames);
+    const sweep = pScene < 0.65 ? lerp(12, 88, easeInOutCubic(pScene / 0.65)) : lerp(88, 56, easeInOutCubic((pScene - 0.65) / 0.35));
+    if (aWrap) aWrap.style.clipPath = `inset(0 ${(100 - sweep).toFixed(1)}% 0 0)`;
+    if (wLine) wLine.style.left = `${sweep.toFixed(1)}%`;
+  }
+
+  // Update Anchor / Pain VFX coordinates
+  if (fx) {
+    const px = (lerp(parseFloat(fx.x0 ?? 52), parseFloat(fx.x1 ?? fx.x0 ?? 52), pScene) / 100) * vpW;
+    const py = (lerp(parseFloat(fx.y0 ?? 78), parseFloat(fx.y1 ?? fx.y0 ?? 78), pScene) / 100) * vpH;
+    const pg = document.getElementById(`${prefix}-pain-g`);
+    if (pg) {
+      pg.setAttribute('transform', `translate(${px.toFixed(1)}, ${py.toFixed(1)})`);
+      const cyc1 = (localT * 1.35) % 1.0;
+      const cyc2 = (localT * 1.35 + 0.5) % 1.0;
+      const pulse = 0.72 + 0.28 * Math.sin(localT * Math.PI * 2.7);
+
+      const core = document.getElementById(`${prefix}-pain-core`);
+      if (core) {
+        core.setAttribute('r', (82 + 28 * pulse).toFixed(1));
+        core.setAttribute('opacity', (0.68 + 0.28 * pulse).toFixed(2));
+      }
+      const r1 = document.getElementById(`${prefix}-pain-r1`);
+      if (r1) {
+        r1.setAttribute('r', lerp(20, 112, easeOutCubic(cyc1)).toFixed(1));
+        r1.setAttribute('opacity', ((1 - cyc1) * 0.92).toFixed(2));
+      }
+      const r2 = document.getElementById(`${prefix}-pain-r2`);
+      if (r2) {
+        r2.setAttribute('r', lerp(24, 118, easeOutCubic(cyc2)).toFixed(1));
+        r2.setAttribute('opacity', ((1 - cyc2) * 0.78).toFixed(2));
+      }
+      const spk = document.getElementById(`${prefix}-pain-spikes`);
+      if (spk) {
+        const spkOp = Math.pow(Math.max(0, Math.sin(localT * Math.PI * 2.7)), 2.2);
+        spk.setAttribute('opacity', (spkOp * 0.88).toFixed(2));
+        spk.setAttribute('transform', `scale(${(0.92 + 0.22 * spkOp).toFixed(3)})`);
+      }
+    }
+  }
+
+  // Update 3D Coverflow Floating Spotlight Cards
+  if ((sc.vp_mode || '') === 'coverflow3' || (sc.vp_mode || '') === 'split3') {
+    const items = Array.isArray(sc.items) ? sc.items : [];
+    const fcues = Array.isArray(sc.focus_cues) && sc.focus_cues.length >= 4
+      ? sc.focus_cues
+      : [0.0, dur * 0.37, dur * 0.62, dur * 0.83];
+
+    const POSES = [
+      [
+        { x: 0,    sc: 1.04, ry: 0,   br: 1.05, z: 32, hero: 1 },
+        { x: 336,  sc: 0.74, ry: -22, br: 0.48, z: 18, hero: 0 },
+        { x: -336, sc: 0.74, ry: 22,  br: 0.48, z: 14, hero: 0 },
+      ],
+      [
+        { x: -336, sc: 0.74, ry: 22,  br: 0.48, z: 20, hero: 0 },
+        { x: 0,    sc: 1.04, ry: 0,   br: 1.05, z: 32, hero: 1 },
+        { x: 336,  sc: 0.74, ry: -22, br: 0.48, z: 12, hero: 0 },
+      ],
+      [
+        { x: 336,  sc: 0.74, ry: -22, br: 0.48, z: 12, hero: 0 },
+        { x: -336, sc: 0.74, ry: 22,  br: 0.48, z: 20, hero: 0 },
+        { x: 0,    sc: 1.04, ry: 0,   br: 1.05, z: 32, hero: 1 },
+      ],
+      [
+        { x: -342, sc: 0.86, ry: 4,   br: 1.03, z: 26, hero: 1 },
+        { x: 0,    sc: 0.88, ry: 0,   br: 1.04, z: 28, hero: 1 },
+        { x: 342,  sc: 0.86, ry: -4,  br: 1.03, z: 26, hero: 1 },
+      ],
+    ];
+
+    const glideDur = 0.38;
+    let sFrom = 0, sTo = 0, sMix = 0;
+    if (localT >= fcues[3]) {
+      sFrom = 2; sTo = 3; sMix = easeInOutCubic(clamp((localT - fcues[3]) / glideDur));
+    } else if (localT >= fcues[2]) {
+      sFrom = 1; sTo = 2; sMix = easeInOutCubic(clamp((localT - fcues[2]) / glideDur));
+    } else if (localT >= fcues[1]) {
+      sFrom = 0; sTo = 1; sMix = easeInOutCubic(clamp((localT - fcues[1]) / glideDur));
+    }
+
+    const enterAll = easeOutCubic(clamp(localT / 0.32));
+    const cycP = (localT * 1.45) % 1.0;
+
+    for (let ci = 0; ci < 3; ci++) {
+      const cimg = document.getElementById(`${prefix}-col-${ci}`);
+      const cardEl = document.getElementById(`${prefix}-cf-card-${ci}`);
+      const badgeEl = document.getElementById(`${prefix}-cf-badge-${ci}`);
+      const pulseSvg = document.getElementById(`${prefix}-cf-pulse-${ci}`);
+      const pulseRing = document.getElementById(`${prefix}-cf-pr-${ci}`);
+      if (!cimg || !cardEl) continue;
+
+      const it = items[ci] || {};
+      const colSlot = it.frame_slot || `s4_${ci + 1}`;
+      await setClipFrame(cimg, colSlot, frameIdx, '', it.clip_frames || 175);
+
+      const pA = POSES[sFrom][ci];
+      const pB = POSES[sTo][ci];
+      const dx = lerp(pA.x, pB.x, sMix);
+      const scV = lerp(pA.sc, pB.sc, sMix) * lerp(0.90, 1.0, enterAll);
+      const ryV = lerp(pA.ry, pB.ry, sMix);
+      const brV = lerp(pA.br, pB.br, sMix);
+      const heroW = lerp(pA.hero, pB.hero, sMix);
+      const zIdx = sMix < 0.5 ? pA.z : pB.z;
+
+      cardEl.style.zIndex = String(zIdx);
+      cardEl.style.opacity = enterAll.toFixed(3);
+      cardEl.style.transform = `translateX(${dx.toFixed(1)}px) scale(${scV.toFixed(4)}) rotateY(${ryV.toFixed(1)}deg)`;
+      cardEl.style.filter = `brightness(${brV.toFixed(2)}) saturate(${lerp(0.82, 1.08, heroW).toFixed(2)})`;
+      cardEl.style.borderColor = heroW > 0.55 ? 'rgba(255, 224, 130, 0.96)' : 'rgba(140, 185, 245, 0.28)';
+      cardEl.style.boxShadow = heroW > 0.55
+        ? '0 24px 52px rgba(0, 0, 0, 0.68), 0 0 28px rgba(255, 208, 96, 0.35)'
+        : '0 14px 30px rgba(0, 0, 0, 0.45)';
+
+      cimg.style.transform = `scale(${lerp(1.01, 1.06, heroW).toFixed(3)})`;
+
+      if (badgeEl) {
+        badgeEl.style.opacity = lerp(0.55, 1.0, heroW).toFixed(2);
+        badgeEl.style.borderColor = heroW > 0.55 ? 'rgba(255, 224, 130, 0.92)' : 'rgba(160, 200, 255, 0.28)';
+      }
+      if (pulseSvg && pulseRing) {
+        const showPulse = (sTo < 3 ? heroW : 0.45) * 0.90;
+        pulseSvg.style.opacity = showPulse.toFixed(2);
+        pulseRing.setAttribute('r', lerp(16, 68, easeOutCubic(cycP)).toFixed(1));
+        pulseRing.setAttribute('opacity', (1 - cycP).toFixed(2));
+      }
+    }
+  }
+}
+
+function highlightProText(clause, keywords) {
+  let html = esc(clause);
+  const kws = Array.isArray(keywords) ? keywords : [];
+  kws.forEach(kw => {
+    if (!kw) return;
+    const ek = esc(kw);
+    html = html.split(ek).join(`<span class="kw-hl">${ek}</span>`);
+  });
+  return html;
+}
+
+function renderSubtitles(sc, localT, pScene) {
+  const stage = document.getElementById('vp-sub-stage');
+  const style = sc.sub_style || 'pro_glass';
+
+  if (style === 'pain_q') {
+    const enter = easeOutCubic(clamp((localT - 0.06) / 0.28));
+    const kwCue = parseFloat(sc.kw_cue ?? 1.01);
+    const pop = localT >= kwCue ? (1 + 0.18 * Math.sin(clamp((localT - kwCue) / 0.42) * Math.PI)) : 1.0;
+    stage.innerHTML = `
+      <div class="sub-pain-q" style="opacity:${enter.toFixed(3)}; transform:translateY(${lerp(20, 0, enter).toFixed(1)}px);">
+        您是否还在被<span class="kw-gold" style="transform:scale(${pop.toFixed(3)});">膝盖问题</span>困扰？
+      </div>`;
+    return 0;
+  }
+
+  if (style === 'pain_stomp3') {
+    const clauses = splitSubtitles(sc.vo_text);
+    const tags = clauses.length >= 3 ? clauses.slice(0, 3) : ['膝盖疼痛', '僵硬麻木', '活动受限'];
+    const cues = Array.isArray(sc.stomp_cues) && sc.stomp_cues.length >= 3 ? sc.stomp_cues : [0.16, 1.11, 2.10];
+    let shakeAmp = 0;
+    const pills = tags.map((tg, i) => {
+      const dt = localT - parseFloat(cues[i]);
+      if (dt < 0) return '';
+      const p = clamp(dt / 0.22);
+      const scVal = lerp(1.62, 1.0, easeOutBack(p));
+      const opVal = clamp(dt / 0.10);
+      if (dt >= 0 && dt < 0.14) {
+        shakeAmp = Math.max(shakeAmp, (1 - dt / 0.14) * 4.5);
+      }
+      return `<span class="stomp-pill" style="opacity:${opVal.toFixed(3)}; transform:scale(${scVal.toFixed(3)}) skewX(-4deg);">${esc(tg)}</span>`;
+    }).filter(Boolean).join('');
+    stage.innerHTML = `<div class="sub-stomp-row">${pills}</div>`;
+    return shakeAmp;
+  }
+
+  if (style === 'pain_urgent') {
+    const kwCue = parseFloat(sc.kw_cue ?? 1.19);
+    const pL = easeOutCubic(clamp((localT - 0.08) / 0.28));
+    const pR = easeOutBack(clamp((localT - kwCue) / 0.26));
+    const pBar = easeOutCubic(clamp((localT - (kwCue + 0.10)) / 0.45));
+    stage.innerHTML = `
+      <div class="sub-urgent-wrap">
+        <div class="sub-urgent-line">
+          <span style="display:inline-block; opacity:${pL.toFixed(3)}; transform:translateX(${lerp(-24, 0, pL).toFixed(1)}px);">关节日常养护</span>
+          <span class="kw-red" style="opacity:${clamp((localT - kwCue) / 0.10).toFixed(3)}; transform:scale(${lerp(1.48, 1.0, pR).toFixed(3)});">要趁早！</span>
+        </div>
+        <div class="sub-urgent-bar" style="width:${(pBar * 440).toFixed(0)}px; opacity:${clamp((localT - (kwCue + 0.08)) / 0.15).toFixed(2)};"></div>
+      </div>`;
+    return 0;
+  }
+
+  let cueText = '';
+  let segLocal = 0;
+  if (Array.isArray(sc.sub_cues) && sc.sub_cues.length) {
+    let activeIdx = 0;
+    for (let i = 0; i < sc.sub_cues.length; i++) {
+      if (localT >= parseFloat(sc.sub_cues[i].t || 0) - 0.03) {
+        activeIdx = i;
+      }
+    }
+    const cue = sc.sub_cues[activeIdx];
+    const firstT = parseFloat(sc.sub_cues[0].t || 0.12);
+    if (localT < firstT - 0.08) {
+      stage.innerHTML = '';
+      return 0;
+    }
+    cueText = cue.text || '';
+    segLocal = Math.max(0, localT - Math.max(0, parseFloat(cue.t || 0) - 0.03));
+  } else {
+    const clauses = splitSubtitles(sc.vo_text);
+    if (!clauses.length) {
+      stage.innerHTML = '';
+      return 0;
+    }
+    const cIdx = Math.min(clauses.length - 1, Math.floor(pScene * clauses.length));
+    const segDur = Math.max(0.4, (parseFloat(sc.end || 3) - parseFloat(sc.start || 0)) / clauses.length);
+    cueText = clauses[cIdx];
+    segLocal = Math.max(0, localT - cIdx * segDur);
+  }
+
+  const segEnter = easeOutCubic(clamp(segLocal / 0.20));
+  const richHtml = highlightProText(cueText, sc.sub_keywords || [
+    '白云山关节型远红外治疗贴', '独立铝塑袋', '一撕一贴', '专为关节疼痛不适研发',
+    '远红外层', '点状透气低敏胶底', '温和亲肤不易敏',
+    '中老年关节', '运动关节劳损', '关节劳损', '日常跌打扭伤', '跌打损伤', '都适用',
+    '恒温热敷感', '促进局部血液循环', '消炎消肿和止痛', '轻松自如'
+  ]);
+  stage.innerHTML = `
+    <div class="sub-pro-glass" style="opacity:${segEnter.toFixed(3)}; transform:translateY(${lerp(12, 0, segEnter).toFixed(1)}px);">
+      ${richHtml}
+    </div>`;
+  return 0;
+}
+
+window.applyConfig = function(cfg) {
+  window.__STUDIO_CFG = cfg;
+  layerKeys.cur = null;
+  layerKeys.prev = null;
+
+  const qs = new URLSearchParams(location.search);
+  const ratio = qs.get('ratio') || '9x16';
+  const stageEl = document.getElementById('stage');
+  const topBand = document.getElementById('top-band');
+  const botBand = document.getElementById('bot-band');
+  const vpEl = document.getElementById('viewport');
+  const subStage = document.getElementById('vp-sub-stage');
+
+  const lmode = (cfg && cfg.layout_mode) || 'three_band';
+  const vpRatio = (cfg && cfg.viewport_ratio) || '16:9';
+
+  if (ratio === '16x9') {
+    stageEl.classList.add('landscape');
+    document.body.style.width = '1920px';
+    document.body.style.height = '1080px';
+    topBand.style.display = 'none';
+    botBand.style.display = 'none';
+    vpW = 1920; vpH = 1080;
+    vpEl.style.top = '0px'; vpEl.style.width = '1920px'; vpEl.style.height = '1080px';
+    subStage.style.bottom = '58px';
+  } else if (lmode === 'fullscreen') {
+    stageEl.classList.remove('landscape');
+    document.body.style.width = '1080px';
+    document.body.style.height = '1920px';
+    topBand.style.display = 'none';
+    botBand.style.display = 'none';
+    vpW = 1080; vpH = 1920;
+    vpEl.style.top = '0px'; vpEl.style.width = '1080px'; vpEl.style.height = '1920px';
+    subStage.style.bottom = '110px';
+  } else {
+    stageEl.classList.remove('landscape');
+    document.body.style.width = '1080px';
+    document.body.style.height = '1920px';
+    topBand.style.display = 'block';
+    botBand.style.display = 'block';
+    vpW = 1080;
+    vpH = vpRatio === '4:3' ? 810 : 608;
+    const topH = vpRatio === '4:3' ? 495 : 596;
+    const botTop = topH + vpH;
+    topBand.style.height = `${topH}px`;
+    vpEl.style.top = `${topH}px`; vpEl.style.width = '1080px'; vpEl.style.height = `${vpH}px`;
+    botBand.style.top = `${botTop}px`; botBand.style.height = `${1920 - botTop}px`;
+    subStage.style.bottom = '16px';
+  }
+
+  const fc = (cfg && cfg.frame_copy) || {};
+  const brand = (cfg && cfg.brand) || {};
+  document.getElementById('th-left').textContent = fc.top_left || '膝盖疼痛';
+  document.getElementById('th-right').textContent = fc.top_right || '半月板损伤';
+  document.getElementById('th-sub').textContent = fc.top_sub || '根源修复 源头解决';
+  document.getElementById('bl1-red').textContent = fc.bot_red || '膝盖问题';
+  document.getElementById('bl1-blue').textContent = fc.bot_blue || '专贴专用';
+  document.getElementById('bot-line2').textContent = fc.bot_line2 || '横扫疼痛反复难题';
+  document.getElementById('top-device-tag').textContent = fc.device_tag || '二类医疗器械 · 外用';
+  const stripEl = document.getElementById('compliance-strip');
+  if (brand.compliance_footer) {
+    stripEl.textContent = brand.compliance_footer;
+    stripEl.style.display = 'flex';
+  } else {
+    stripEl.style.display = 'none';
+  }
+};
+
+async function _renderAtImpl(t) {
+  const cfg = window.__STUDIO_CFG;
+  if (!cfg) return;
+  const duration = Math.max(1, parseFloat(cfg.duration || 41.3));
+  const scenes = Array.isArray(cfg.scenes) && cfg.scenes.length ? cfg.scenes : [];
+  if (!scenes.length) return;
+
+  let idx = scenes.findIndex(s => t >= parseFloat(s.start || 0) && t < parseFloat(s.end || duration));
+  if (idx < 0) idx = t < parseFloat(scenes[0].start || 0) ? 0 : scenes.length - 1;
+  const sc = scenes[idx];
+  const st = parseFloat(sc.start || 0);
+  const en = Math.max(st + 0.3, parseFloat(sc.end || duration));
+  const localT = Math.max(0, t - st);
+  const pScene = clamp(localT / (en - st));
+
+  const curWrap = document.getElementById('vp-layer-cur');
+  const prevWrap = document.getElementById('vp-layer-prev');
+  const flashEl = document.getElementById('vp-flash');
+  const painEdge = document.getElementById('vp-pain-edge');
+
+  await updateSceneLayer(curWrap, 'cur', sc, localT);
+
+  const transType = sc.trans_in || (idx === 0 ? 'none' : 'dissolve');
+  const transDur = transType === 'whip_zoom' ? 0.24 : (transType === 'optical_flash' ? 0.38 : (transType === 'dissolve' ? 0.32 : 0.0));
+
+  let flashAlpha = 0;
+  const nextSc = idx + 1 < scenes.length ? scenes[idx + 1] : null;
+  if (nextSc && nextSc.trans_in === 'optical_flash' && (en - t) < 0.14) {
+    flashAlpha = Math.max(flashAlpha, easeOutCubic(1 - (en - t) / 0.14) * 0.72);
+  }
+
+  if (idx > 0 && transDur > 0 && localT < transDur) {
+    const prevSc = scenes[idx - 1];
+    const prevDur = Math.max(0.3, parseFloat(prevSc.end || st) - parseFloat(prevSc.start || 0));
+    await updateSceneLayer(prevWrap, 'prev', prevSc, prevDur + localT);
+    prevWrap.style.display = 'block';
+
+    const u = clamp(localT / transDur);
+    if (transType === 'whip_zoom') {
+      const e = easeInOutCubic(u);
+      prevWrap.style.opacity = (1 - e).toFixed(3);
+      prevWrap.style.transform = `scale(${lerp(1.02, 1.15, e).toFixed(4)})`;
+      curWrap.style.opacity = '1';
+      curWrap.style.transform = `scale(${lerp(1.12, 1.00, easeOutCubic(u)).toFixed(4)})`;
+    } else if (transType === 'optical_flash') {
+      const e = easeOutCubic(u);
+      prevWrap.style.opacity = clamp(1 - u * 2.2).toFixed(3);
+      prevWrap.style.transform = 'scale(1.02)';
+      curWrap.style.opacity = '1';
+      curWrap.style.transform = `scale(${lerp(1.06, 1.00, e).toFixed(4)})`;
+      flashAlpha = Math.max(flashAlpha, (1 - e) * 0.90);
+    } else {
+      const e = easeInOutCubic(u);
+      prevWrap.style.opacity = '1';
+      prevWrap.style.transform = 'none';
+      curWrap.style.opacity = e.toFixed(3);
+      curWrap.style.transform = 'none';
+    }
+  } else {
+    prevWrap.style.display = 'none';
+    curWrap.style.opacity = '1';
+    curWrap.style.transform = 'none';
+  }
+
+  const shakeAmp = renderSubtitles(sc, localT, pScene);
+  if (shakeAmp > 0.05) {
+    const sx = (Math.sin(t * 95) * shakeAmp).toFixed(1);
+    const sy = (Math.cos(t * 112) * shakeAmp).toFixed(1);
+    curWrap.style.transform = `translate(${sx}px, ${sy}px) scale(1.012)`;
+  }
+
+  flashEl.style.opacity = flashAlpha.toFixed(3);
+
+  const fx = sc.anchor_fx || sc.pain_fx;
+  if (fx && (fx.style || 'pain') === 'pain') {
+    const pBeat = 0.35 + 0.35 * Math.max(0, Math.sin(localT * Math.PI * 2.7));
+    painEdge.style.opacity = pBeat.toFixed(2);
+  } else {
+    painEdge.style.opacity = '0';
+  }
+
+  const sheenBar = document.getElementById('bot-box-sheen-bar');
+  if (sheenBar) {
+    const cyc = (t % 4.6) / 4.6;
+    if (cyc < 0.28) {
+      const sp = easeInOutCubic(cyc / 0.28);
+      sheenBar.style.left = `${lerp(-55, 135, sp).toFixed(1)}%`;
+      sheenBar.style.opacity = '1';
+    } else {
+      sheenBar.style.opacity = '0';
+    }
+  }
+  const crossSvg = document.getElementById('top-cross-svg');
+  if (crossSvg) {
+    const cs = 1 + 0.045 * Math.sin(t * 3.2);
+    crossSvg.style.transform = `scale(${cs.toFixed(3)})`;
+  }
+}
+
+let _renderBusy = false;
+let _queuedT = null;
+window.renderAt = async function(t) {
+  const numT = isNaN(parseFloat(t)) ? 0 : parseFloat(t);
+  if (_renderBusy) {
+    _queuedT = numT;
+    return;
+  }
+  _renderBusy = true;
+  try {
+    await _renderAtImpl(numT);
+    while (_queuedT !== null) {
+      const nextT = _queuedT;
+      _queuedT = null;
+      await _renderAtImpl(nextT);
+    }
+  } finally {
+    _renderBusy = false;
+  }
+};
+
+(async function() {
+  const qs = new URLSearchParams(location.search);
+  const pid = qs.get('project');
+  if (pid) {
+    try {
+      const r = await fetch(`/api/projects/${encodeURIComponent(pid)}`);
+      if (r.ok) {
+        const d = await r.json();
+        window.applyConfig(d.config);
+      }
+    } catch (e) {}
+  }
+  const tInit = parseFloat(qs.get('t') || '1.0');
+  await window.renderAt(isNaN(tInit) ? 1.0 : tInit);
+})();
+
+window.addEventListener('message', (ev) => {
+  if (!ev.data) return;
+  if (ev.data.type === 'applyConfig') { window.applyConfig(ev.data.config); window.renderAt(ev.data.t ?? 1.0); }
+  if (ev.data.type === 'seek') window.renderAt(ev.data.t);
+});
+</script>
+</body>
+</html>

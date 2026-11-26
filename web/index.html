@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ecom-tvc-studio · 电商主图视频可视化工作台</title>
+<title>ecom-tvc-studio 2.0 · 高定电商视频可视化工作台</title>
 <style>
   :root {
     --bg: #0B1513;
@@ -26,18 +26,18 @@
   header {
     height: 60px; padding: 0 20px;
     background: #0D1D1A; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
     flex-shrink: 0;
   }
   .logo { font-size: 18px; font-weight: 900; color: var(--gold); letter-spacing: 0.04em; display:flex; align-items:center; gap:10px; }
-  .bar-group { display: flex; align-items: center; gap: 10px; }
+  .bar-group { display: flex; align-items: center; gap: 8px; }
   select, input[type="text"], textarea {
     background: #0D1B18; color: var(--text); border: 1px solid rgba(255,255,255,0.14);
-    border-radius: 8px; padding: 8px 10px; font-size: 13px; font-family: inherit;
+    border-radius: 8px; padding: 7px 10px; font-size: 13px; font-family: inherit;
   }
   select:focus, input:focus, textarea:focus { outline: none; border-color: var(--gold); }
   button {
-    border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 700;
+    border: none; border-radius: 8px; padding: 8px 13px; font-size: 13px; font-weight: 700;
     cursor: pointer; font-family: inherit; transition: all 0.15s;
   }
   .btn-ghost { background: rgba(255,255,255,0.08); color: var(--text); }
@@ -51,7 +51,7 @@
 
   main { flex: 1; display: flex; overflow: hidden; }
   .left-pane {
-    width: 490px; min-width: 420px; background: var(--panel);
+    width: 500px; min-width: 430px; background: var(--panel);
     border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden;
   }
   .tabs { display: flex; border-bottom: 1px solid var(--border); background: #0E1F1B; }
@@ -69,6 +69,7 @@
   .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
   .field input, .field textarea { width: 100%; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 
   .prompt-box {
     background: #0A1614; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
@@ -80,7 +81,7 @@
   }
 
   .right-pane {
-    flex: 1; display: flex; flex-direction: column; padding: 16px 20px; gap: 14px; overflow-y: auto;
+    flex: 1; display: flex; flex-direction: column; padding: 14px 20px; gap: 12px; overflow-y: auto;
   }
   .stage-shell {
     flex: 1; min-height: 440px; background: #07110F; border: 1px solid var(--border);
@@ -89,11 +90,18 @@
   #preview-wrap { position: relative; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.55); border-radius: 8px; background: #000; }
   #preview-frame { border: none; transform-origin: 0 0; display: block; }
 
+  .coord-banner {
+    position: absolute; top: 12px; right: 14px; z-index: 50;
+    background: rgba(12, 34, 29, 0.92); border: 1px solid var(--gold);
+    border-radius: 999px; padding: 6px 14px; font-size: 12px; color: var(--gold);
+    display: none; align-items: center; gap: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+  }
+
   .timeline-bar {
     background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
     padding: 12px 16px; display: flex; flex-direction: column; gap: 10px;
   }
-  .tl-row { display: flex; align-items: center; gap: 12px; }
+  .tl-row { display: flex; align-items: center; gap: 10px; }
   #scrubber { flex: 1; accent-color: var(--gold); cursor: pointer; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip { background: rgba(255,255,255,0.07); color: var(--muted); font-size: 11px; padding: 4px 10px; border-radius: 999px; cursor: pointer; }
@@ -114,184 +122,147 @@
 </head>
 <body>
 <header>
-  <div class="logo">✦ ecom-tvc-studio <span style="font-size:12px; color:var(--muted); font-weight:500;">电商主图视频可视化工作台</span></div>
+  <div class="logo">✦ ecom-tvc-studio 2.0 <span style="font-size:12px; color:var(--muted); font-weight:500;">有声实时联播 · 单镜极速重渲</span></div>
   <div class="bar-group">
     <select id="proj-select" onchange="loadProject(this.value)"></select>
-    <button class="btn-ghost" onclick="createProject()">+ 新建产品</button>
-    <button class="btn-ghost" onclick="loadProject(currentPid); toast('已同步最新配置与素材')">🔄 同步Agent修改</button>
+    <button class="btn-ghost" onclick="createProject()">+ 新建项目</button>
+    <button class="btn-ghost" onclick="loadProject(currentPid); toast('已同步 Agent 最新修改')">🔄 同步Agent修改</button>
     <span style="width:1px; height:22px; background:rgba(255,255,255,0.12);"></span>
     <button id="btn-9x16" class="btn-active" onclick="setRatio('9x16')">9:16 竖屏</button>
     <button id="btn-16x9" class="btn-ghost" onclick="setRatio('16x9')">16:9 横屏</button>
     <span id="comp-badge" class="badge-ok">✓ 合规通过</span>
-    <button class="btn-mint" onclick="runPreviewGrid()">11帧预览图</button>
-    <button class="btn-primary" onclick="startRender()">▶ 一键渲染出片</button>
+    <button class="btn-mint" onclick="runPreviewGrid()">分镜预览长图</button>
+    <button class="btn-primary" onclick="startRender(false)">⚡ 极速增量出片</button>
   </div>
 </header>
 
 <main>
-  <!-- Left Workspace -->
   <section class="left-pane">
     <div class="tabs">
-      <div class="tab active" onclick="switchTab(0)">📝 文案与合规</div>
-      <div class="tab" onclick="switchTab(1)">✨ 中文提示词</div>
-      <div class="tab" onclick="switchTab(2)">🖼️ 素材上传</div>
-      <div class="tab" onclick="switchTab(3)">🔊 音轨与配音</div>
+      <div class="tab active" onclick="switchTab(0)">📝 分镜与动效</div>
+      <div class="tab" onclick="switchTab(1)">✨ 导演提示词</div>
+      <div class="tab" onclick="switchTab(2)">🖼️ 素材回填</div>
+      <div class="tab" onclick="switchTab(3)">🔊 原速配音对轴</div>
     </div>
 
-    <!-- Tab 0: Copy & Compliance -->
+    <!-- Tab 0 -->
     <div id="tab-0" class="tab-body active">
       <div id="comp-alerts" style="display:none;" class="sec"></div>
 
       <div class="sec">
-        <h3>🎬 参考视频智能拉片（按参考片节奏自动拆幕）</h3>
+        <h3>🎬 参考视频像素级拉片（自动识别三段包框/全屏比例）</h3>
         <div class="upload-row">
-          <span>上传任意参考视频 MP4（自动拆关键帧图 + 生成分镜骨架 + 提取底乐）</span>
+          <span>上传参考视频 MP4（自动拆关键帧 + 识别视窗契约 + 提取底乐）</span>
           <input type="file" accept="video/mp4,video/*" onchange="analyzeRefVideo(this)" />
         </div>
-        <div id="ref-result" style="margin-top:8px; font-size:12px; color:var(--muted);">也可不传参考视频，直接在下方自由增删分镜或由 AI Agent 原创脚本。</div>
+        <div id="ref-result" style="margin-top:6px; font-size:12px; color:var(--muted);">支持参考片复刻或由 Agent 根据产品事实库原创脚本。</div>
       </div>
 
       <div class="sec">
-        <h3>品牌与合规模式 <button class="btn-primary" style="padding:5px 12px; font-size:12px;" onclick="saveConfig()">保存并刷新预览</button></h3>
+        <h3>版式契约与品类合规 <button class="btn-primary" style="padding:5px 12px; font-size:12px;" onclick="saveConfig()">保存并刷新画布</button></h3>
         <div class="grid2">
           <div class="field"><label>产品全称</label><input id="f-product_name" type="text" /></div>
           <div class="field">
             <label>品类合规模式</label>
             <select id="f-category" style="width:100%;">
-              <option value="general">通用电商（拦截绝对化极限词）</option>
-              <option value="blue_hat">蓝帽保健食品（严审医疗词 + 批号 + 必填声明）</option>
-              <option value="food">普通/功能食品（禁医疗词 + 禁极限词）</option>
-              <option value="skincare">护肤美妆（禁医疗/根治词 + 禁极限词）</option>
+              <option value="medical_device">二类/外用医疗器械（注册证+忠告语）</option>
+              <option value="blue_hat">蓝帽保健食品（批号+法定声明）</option>
+              <option value="functional_food">功能性食品/膳食营养</option>
+              <option value="skincare">功效护肤/个护家清</option>
+              <option value="general">通用电商</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>版式布局模式</label>
+            <select id="f-layout_mode" style="width:100%;">
+              <option value="three_band">三段式高转化包框（上头+中视窗+下常驻盒）</option>
+              <option value="fullscreen">9:16 全屏沉浸式种草</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>中间视窗比例（包框模式）</label>
+            <select id="f-viewport_ratio" style="width:100%;">
+              <option value="16:9">16:9 宽银幕视窗 (1080×608)</option>
+              <option value="4:3">4:3 视窗 (1080×810)</option>
             </select>
           </div>
           <div class="field"><label>人群/类目标签</label><input id="f-category_tag" type="text" /></div>
-          <div class="field"><label>批准文号（蓝帽可选）</label><input id="f-approval_no" type="text" /></div>
+          <div class="field"><label>注册证号 / 批准文号</label><input id="f-approval_no" type="text" /></div>
         </div>
-        <div class="field"><label>底部合规声明（蓝帽必填）</label><input id="f-compliance_footer" type="text" /></div>
+        <div class="field"><label>底部法定合规声明</label><input id="f-compliance_footer" type="text" /></div>
+      </div>
+
+      <div id="frame-copy-panel" class="sec" style="display:none;">
+        <h3>上下包框常驻文案</h3>
+        <div class="grid2">
+          <div class="field"><label>顶部主标题·左（黑）</label><input id="fc-top_left" type="text" /></div>
+          <div class="field"><label>顶部主标题·右（红）</label><input id="fc-top_right" type="text" /></div>
+          <div class="field"><label>顶部十字副标题</label><input id="fc-top_sub" type="text" /></div>
+          <div class="field"><label>右上角器械/属性标</label><input id="fc-device_tag" type="text" /></div>
+          <div class="field"><label>底部第一行·左（红）</label><input id="fc-bot_red" type="text" /></div>
+          <div class="field"><label>底部第一行·右（蓝）</label><input id="fc-bot_blue" type="text" /></div>
+        </div>
+        <div class="field"><label>底部第二行大字</label><input id="fc-bot_line2" type="text" /></div>
       </div>
 
       <div id="dynamic-scenes-panel" class="sec" style="display:none;">
-        <h3>自由分镜积木编排（任意幕数 · 任意时长） <button class="btn-mint" style="padding:4px 10px; font-size:12px;" onclick="addDynamicScene()">+ 新增一幕</button></h3>
+        <h3>
+          <span>逐镜编排（点击右侧视窗可拾取痛点坐标）</span>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-mint" style="padding:4px 10px; font-size:12px;" onclick="runBuildVo()">🎙️ 原速配音定轴</button>
+            <button class="btn-ghost" style="padding:4px 10px; font-size:12px;" onclick="addDynamicScene()">+ 新增镜</button>
+          </div>
+        </h3>
         <div id="dynamic-scenes-list"></div>
-      </div>
-
-      <div id="legacy-copy-panel">
-        <div class="sec">
-          <h3>落版与规格（三金 Demo 字段）</h3>
-          <div class="grid2">
-            <div class="field"><label>落版名称第一行</label><input id="f-product_name_line1" type="text" /></div>
-            <div class="field"><label>落版名称第二行</label><input id="f-product_name_line2" type="text" /></div>
-            <div class="field"><label>规格（如 42粒 / 瓶）</label><input id="f-spec_pack" type="text" /></div>
-            <div class="field"><label>批准功能 1</label><input id="f-function_1" type="text" /></div>
-            <div class="field"><label>批准功能 2</label><input id="f-function_2" type="text" /></div>
-            <div class="field"><label>落版金色徽章</label><input id="f-finale_badge" type="text" /></div>
-          </div>
-        </div>
-
-        <div class="sec">
-          <h3>开场三大痛点文案（S1 / S2A / S2B）</h3>
-          <div class="grid2">
-            <div class="field"><label>开场主标题 1</label><input id="f-hook_line1" type="text" /></div>
-            <div class="field"><label>开场主标题 2</label><input id="f-hook_line2" type="text" /></div>
-            <div class="field"><label>开场副标题</label><input id="f-hook_sub" type="text" /></div>
-            <div class="field"><label>痛点 1 标签</label><input id="f-pain1_tag" type="text" /></div>
-            <div class="field"><label>痛点 2 标签</label><input id="f-pain2_tag" type="text" /></div>
-            <div class="field"><label>痛点 3 标题</label><input id="f-pain3_title" type="text" /></div>
-          </div>
-        </div>
-
-        <div class="sec">
-          <h3>五重营养与食材类比（S5）</h3>
-          <div class="grid2">
-            <div class="field"><label>卡片 1 含量标</label><input id="f-card1_pill" type="text" /></div>
-            <div class="field"><label>卡片 1 类比</label><input id="f-card1_analogy" type="text" /></div>
-            <div class="field"><label>卡片 2 含量标</label><input id="f-card2_pill" type="text" /></div>
-            <div class="field"><label>卡片 2 类比</label><input id="f-card2_analogy" type="text" /></div>
-            <div class="field"><label>卡片 3 含量标</label><input id="f-card3_pill" type="text" /></div>
-            <div class="field"><label>卡片 3 类比</label><input id="f-card3_analogy" type="text" /></div>
-            <div class="field"><label>卡片 4 含量标</label><input id="f-card4_pill" type="text" /></div>
-            <div class="field"><label>卡片 4 类比</label><input id="f-card4_analogy" type="text" /></div>
-          </div>
-        </div>
       </div>
     </div>
 
-    <!-- Tab 1: Auto Chinese Prompts -->
+    <!-- Tab 1 -->
     <div id="tab-1" class="tab-body">
       <div id="prompts-list"></div>
     </div>
 
-    <!-- Tab 2: Asset Upload -->
+    <!-- Tab 2 -->
     <div id="tab-2" class="tab-body">
+      <div id="dynamic-clip-uploads" class="sec" style="display:none;"></div>
       <div class="sec">
         <h3>官方原图（零 AI 篡改）</h3>
-        <div class="upload-row"><span>盒 + 瓶组合主图（product_combo.png）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/official/product_combo.png', this)" /></div>
-        <div class="upload-row"><span>产品单瓶图（product_bottle.png）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/official/product_bottle.png', this)" /></div>
-        <div class="upload-row"><span>品牌 Logo（sanjin_logo.png）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/official/sanjin_logo.png', this)" /></div>
-        <div class="upload-row"><span>蓝帽标（blue_hat.png）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/official/blue_hat.png', this)" /></div>
-        <div class="upload-row"><span>胶囊/药丸实拍（capsule_green.png）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/official/capsule_green.png', this)" /></div>
-      </div>
-
-      <div class="sec">
-        <h3>开场 3 段真动态痛点 MP4（自动抽 24fps 帧）</h3>
-        <div class="upload-row"><span>痛点 1 动态视频（S1）</span><input type="file" accept="video/mp4" onchange="uploadAsset('video:frames_02', this)" /></div>
-        <div class="upload-row"><span>痛点 2 动态视频（S2A）</span><input type="file" accept="video/mp4" onchange="uploadAsset('video:frames_01', this)" /></div>
-        <div class="upload-row"><span>痛点 3 动态视频（S2B）</span><input type="file" accept="video/mp4" onchange="uploadAsset('video:frames_03', this)" /></div>
-      </div>
-
-      <div class="sec">
-        <h3>机理透视与跨品类核心图（换品类必换）</h3>
-        <div class="upload-row"><span>S3 透视机理图（05_knee_xray.png，可换肠胃/肝脏/肌肤）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/cutouts/05_knee_xray.png', this)" /></div>
-        <div class="upload-row"><span>S4 无标对照瓶（blank_white_bottle.png）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/v7/blank_white_bottle.png', this)" /></div>
-        <div class="upload-row"><span>S5 核心主体图·上（joint_upper.png）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/v7/joint_upper.png', this)" /></div>
-        <div class="upload-row"><span>S5 核心主体图·下（joint_lower.png）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/v7/joint_lower.png', this)" /></div>
-      </div>
-
-      <div class="sec">
-        <h3>AI 静物与桌面实景图</h3>
-        <div class="upload-row"><span>暖阳桌面实景背景（16:9）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/textures/bg_warm_sunlight.png', this)" /></div>
-        <div class="upload-row"><span>食材类比 1（鲨鱼软骨）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/cutouts/19_food_shark_cartilage.png', this)" /></div>
-        <div class="upload-row"><span>食材类比 2（鲜牛奶）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/cutouts/10_ing_calcium.png', this)" /></div>
-        <div class="upload-row"><span>食材类比 3（鸡蛋黄）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/cutouts/16_food_eggyolk.png', this)" /></div>
-        <div class="upload-row"><span>食材类比 4（葛根片）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/cutouts/11_ing_puerarin.png', this)" /></div>
-        <div class="upload-row"><span>痛点 1 静图兜底（未传 MP4 时显示）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/cutouts/01_stairs_man.png', this)" /></div>
-        <div class="upload-row"><span>痛点 2 静图兜底（未传 MP4 时显示）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/cutouts/02_back_woman.png', this)" /></div>
-        <div class="upload-row"><span>痛点 3 静图兜底（未传 MP4 时显示）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/cutouts/03_knee_sit_man.png', this)" /></div>
+        <div class="upload-row"><span>右下角常驻外盒透明图（box_right_tilt_cut.png）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/official/box_right_tilt_cut.png', this)" /></div>
+        <div class="upload-row"><span>左上角品牌 Logo（baiyunshan_logo.png）</span><input type="file" accept="image/*" onchange="uploadAsset('assets/official/baiyunshan_logo.png', this)" /></div>
       </div>
     </div>
 
-    <!-- Tab 3: Audio & Voiceover -->
+    <!-- Tab 3 -->
     <div id="tab-3" class="tab-body">
       <div class="sec">
-        <h3>三层音轨开关 <button class="btn-primary" style="padding:5px 12px; font-size:12px;" onclick="saveConfig()">保存音轨配置</button></h3>
+        <h3>
+          <span>Audio-First 原速配音与三维声效</span>
+          <button class="btn-mint" style="padding:5px 12px; font-size:12px;" onclick="runBuildVo()">🎙️ 一键生成+0%原速配音并定轴</button>
+        </h3>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">
+          按 +0% 标准自然语速生成语音并抓取 WordBoundary 词级毫秒时间戳，自动反推每镜时长与字幕切点，彻底杜绝结尾倍速赶拍。
+        </p>
         <div style="display:flex; gap:18px; margin-bottom:12px; font-size:13px;">
-          <label><input id="a-bgm" type="checkbox" /> 启用 BGM</label>
-          <label><input id="a-sfx" type="checkbox" /> 启用五层贴画音效</label>
+          <label><input id="a-bgm" type="checkbox" /> 启用情绪起伏 BGM</label>
+          <label><input id="a-sfx" type="checkbox" /> 启用花字/轮播绑定音效</label>
           <label><input id="a-vo" type="checkbox" /> 启用配音（自动闪避）</label>
         </div>
         <div class="field">
-          <label>配音音色（edge-tts）</label>
+          <label>配音音色矩阵（edge-tts）</label>
           <select id="a-voice" style="width:100%;">
-            <option value="zh-CN-YunyangNeural">沉稳专业男声（推荐 · zh-CN-YunyangNeural）</option>
-            <option value="zh-CN-XiaoxiaoNeural">温暖亲切女声（zh-CN-XiaoxiaoNeural）</option>
-            <option value="zh-CN-XiaoyiNeural">清晰明朗女声（zh-CN-XiaoyiNeural）</option>
+            <option value="zh-CN-YunyangNeural">医疗/蓝帽权威男声（zh-CN-YunyangNeural）</option>
+            <option value="zh-CN-XiaoxiaoNeural">功效护肤温婉女声（zh-CN-XiaoxiaoNeural）</option>
+            <option value="zh-CN-XiaoyiNeural">功能食品活力种草女声（zh-CN-XiaoyiNeural）</option>
           </select>
         </div>
         <div class="upload-row" style="margin-top:10px;">
-          <span>替换参考底乐 BGM（WAV / MP3）</span>
+          <span>替换自定义底乐 BGM（WAV / MP3）</span>
           <input type="file" accept="audio/*" onchange="uploadAsset('audio/bgm_ref.wav', this)" />
         </div>
       </div>
       <div class="sec">
-        <h3>SRT 字幕驱动自动拆幕对齐 <button class="btn-ghost" style="padding:4px 10px; font-size:11px;" onclick="resetTiming()">重置 45s 默认时间轴</button></h3>
-        <div class="upload-row">
-          <span>导入 .srt 口播字幕（自动拆幕 + 同步配音与音效时间轴）</span>
-          <input type="file" accept=".srt,text/plain" onchange="uploadSrt(this)" />
-        </div>
-        <div id="srt-status" style="font-size:12px; color:var(--muted); margin-top:6px;">当前使用默认 45.0s 标准时间轴</div>
-      </div>
-      <div class="sec">
-        <h3>逐幕配音口播词（10 幕自动防重叠）</h3>
+        <h3>逐幕口播词预览（已锁死毫秒级 WordBoundary）</h3>
+        <div id="srt-status" style="font-size:12px; color:var(--mint); margin-bottom:8px;"></div>
         <div id="vo-lines-box"></div>
       </div>
     </div>
@@ -300,29 +271,25 @@
   <!-- Right Live Preview & Render Stage -->
   <section class="right-pane">
     <div class="stage-shell" id="stage-shell">
+      <div id="coord-banner" class="coord-banner">
+        <span id="coord-text">🎯 坐标: X=50%, Y=50%</span>
+        <button class="btn-primary" style="padding:3px 9px; font-size:11px;" onclick="applyPickedCoord()">填入当前幕痛点红圈</button>
+      </div>
       <div id="preview-wrap">
         <iframe id="preview-frame"></iframe>
       </div>
     </div>
 
+    <audio id="studio-audio" preload="auto" style="display:none;"></audio>
+
     <div class="timeline-bar">
       <div class="tl-row">
-        <button id="btn-play" class="btn-ghost" onclick="togglePlay()">▶ 播放预览</button>
-        <input id="scrubber" type="range" min="0" max="45" step="0.05" value="1.8" oninput="seekTo(parseFloat(this.value))" />
-        <span id="time-label" style="font-size:13px; color:var(--gold); font-weight:700; min-width:86px; text-align:right;">1.80 / 45.0s</span>
+        <button id="btn-play-audio" class="btn-mint" onclick="toggleAudioPlay()">🔊 有声实时联播</button>
+        <button id="btn-play" class="btn-ghost" onclick="toggleSilentPlay()">▶ 静音走轴</button>
+        <input id="scrubber" type="range" min="0" max="45" step="0.04" value="1.5" oninput="seekTo(parseFloat(this.value), true)" />
+        <span id="time-label" style="font-size:13px; color:var(--gold); font-weight:700; min-width:96px; text-align:right;">1.50 / 41.3s</span>
       </div>
-      <div id="scene-chips" class="chips">
-        <span class="chip" onclick="seekTo(1.8)">S1 上楼痛点</span>
-        <span class="chip" onclick="seekTo(5.5)">S2A 扶腰痛点</span>
-        <span class="chip" onclick="seekTo(9.2)">S2B 夜间抽筋</span>
-        <span class="chip" onclick="seekTo(13.8)">S3 X光透视</span>
-        <span class="chip" onclick="seekTo(17.0)">S4 纯白单钙瓶</span>
-        <span class="chip" onclick="seekTo(21.0)">S5A 鲨鱼软骨+牛奶</span>
-        <span class="chip" onclick="seekTo(25.6)">S5B 鸡蛋黄+葛根素</span>
-        <span class="chip" onclick="seekTo(31.2)">S5C 注入屈伸</span>
-        <span class="chip" onclick="seekTo(37.4)">S6 蓝帽+小胶囊</span>
-        <span class="chip" onclick="seekTo(42.5)">S7 暖阳大牌落版</span>
-      </div>
+      <div id="scene-chips" class="chips"></div>
     </div>
 
     <div id="output-bar" class="output-bar">
@@ -339,18 +306,21 @@
 <div id="toast" class="toast"></div>
 
 <script>
-let currentPid = 'sanjin-antang';
+let currentPid = 'baiyunshan-guanjietie';
 let currentRatio = '9x16';
 let currentCfg = null;
-let currentDuration = 45.0;
+let currentAudioUrl = '';
+let currentDuration = 41.3;
 let playTimer = null;
-let curTime = 1.8;
+let rafId = null;
+let curTime = 1.5;
+let lastPicked = null;
 
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.style.display = 'block';
   clearTimeout(window._tt);
-  window._tt = setTimeout(() => t.style.display = 'none', 2800);
+  window._tt = setTimeout(() => t.style.display = 'none', 3000);
 }
 
 function switchTab(idx) {
@@ -364,7 +334,7 @@ function fitPreview() {
   const frame = document.getElementById('preview-frame');
   const w = currentRatio === '9x16' ? 1080 : 1920;
   const h = currentRatio === '9x16' ? 1920 : 1080;
-  const scale = Math.min((shell.clientWidth - 36) / w, (shell.clientHeight - 28) / h);
+  const scale = Math.min((shell.clientWidth - 32) / w, (shell.clientHeight - 24) / h);
   wrap.style.width = `${Math.floor(w * scale)}px`;
   wrap.style.height = `${Math.floor(h * scale)}px`;
   frame.style.width = `${w}px`;
@@ -372,6 +342,32 @@ function fitPreview() {
   frame.style.transform = `scale(${scale})`;
 }
 window.addEventListener('resize', fitPreview);
+
+window.addEventListener('message', (ev) => {
+  if (!ev.data || ev.data.type !== 'pickCoord') return;
+  lastPicked = { x: ev.data.x, y: ev.data.y };
+  const ban = document.getElementById('coord-banner');
+  document.getElementById('coord-text').textContent = `🎯 拾取视窗坐标: X=${ev.data.x}%, Y=${ev.data.y}%`;
+  ban.style.display = 'flex';
+});
+
+function getActiveSceneIndex() {
+  if (!currentCfg || !Array.isArray(currentCfg.scenes)) return -1;
+  let idx = currentCfg.scenes.findIndex(s => curTime >= parseFloat(s.start || 0) && curTime < parseFloat(s.end || currentDuration));
+  return idx < 0 ? 0 : idx;
+}
+
+async function applyPickedCoord() {
+  if (!lastPicked || !currentCfg || !Array.isArray(currentCfg.scenes)) return;
+  const idx = getActiveSceneIndex();
+  if (idx < 0) return;
+  currentCfg.scenes[idx].pain_fx = {
+    x0: lastPicked.x, y0: lastPicked.y,
+    x1: lastPicked.x, y1: lastPicked.y,
+  };
+  await saveConfig();
+  toast(`已将痛点红圈坐标 (${lastPicked.x}%, ${lastPicked.y}%) 应用至第 ${idx + 1} 镜！`);
+}
 
 function setRatio(r) {
   currentRatio = r;
@@ -381,11 +377,15 @@ function setRatio(r) {
 }
 
 function isDynamicCfg(cfg) {
-  return !!(cfg && (cfg.template_mode === 'dynamic' || Array.isArray(cfg.scenes)));
+  return !!(cfg && (cfg.template_mode === 'dynamic' || cfg.template_mode === 'ref_frame' || Array.isArray(cfg.scenes)));
 }
 
 function reloadFrame() {
   fitPreview();
+  if (currentCfg && currentCfg.template_mode === 'ref_frame') {
+    document.getElementById('preview-frame').src = `/templates/ref_frame_studio.html?project=${encodeURIComponent(currentPid)}&ratio=${currentRatio}&t=${curTime.toFixed(2)}&_=${Date.now()}`;
+    return;
+  }
   if (isDynamicCfg(currentCfg)) {
     document.getElementById('preview-frame').src = `/templates/dynamic_studio.html?project=${encodeURIComponent(currentPid)}&ratio=${currentRatio}&t=${curTime.toFixed(2)}&_=${Date.now()}`;
     return;
@@ -394,30 +394,104 @@ function reloadFrame() {
   document.getElementById('preview-frame').src = `/templates/${tpl}?project=${encodeURIComponent(currentPid)}&t=${curTime.toFixed(2)}&_=${Date.now()}`;
 }
 
-function seekTo(t) {
+function seekTo(t, syncAudio = false) {
   curTime = Math.max(0, Math.min(currentDuration, t));
   document.getElementById('scrubber').value = curTime;
   document.getElementById('time-label').textContent = `${curTime.toFixed(2)} / ${currentDuration.toFixed(1)}s`;
   const frame = document.getElementById('preview-frame');
   if (frame.contentWindow) frame.contentWindow.postMessage({ type: 'seek', t: curTime }, '*');
+  if (syncAudio) {
+    const aud = document.getElementById('studio-audio');
+    if (aud && aud.src && !aud.paused) {
+      aud.currentTime = curTime;
+    }
+  }
 }
 
-function togglePlay() {
+function stopAllPlayback() {
+  if (playTimer) { clearInterval(playTimer); playTimer = null; }
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  const aud = document.getElementById('studio-audio');
+  if (aud && !aud.paused) aud.pause();
+  document.getElementById('btn-play').textContent = '▶ 静音走轴';
+  document.getElementById('btn-play-audio').textContent = '🔊 有声实时联播';
+}
+
+async function toggleAudioPlay() {
+  const aud = document.getElementById('studio-audio');
+  const btn = document.getElementById('btn-play-audio');
+  if (rafId || !aud.paused) {
+    stopAllPlayback();
+    return;
+  }
+  stopAllPlayback();
+  if (!currentAudioUrl) {
+    toast('正在快速混音生成有声预览轨...');
+    const r = await fetch(`/api/projects/${encodeURIComponent(currentPid)}/preview-audio`, { method: 'POST' });
+    const d = await r.json();
+    if (!d.ok) { toast('混音生成失败：' + (d.error || '')); return; }
+    currentAudioUrl = d.audio_url;
+  }
+  if (aud.dataset.loadedUrl !== currentAudioUrl) {
+    aud.src = currentAudioUrl;
+    aud.dataset.loadedUrl = currentAudioUrl;
+  }
+  if (curTime >= currentDuration - 0.15) curTime = 0;
+  aud.currentTime = curTime;
+  try {
+    await aud.play();
+  } catch (e) {
+    toast('音频播放失败：' + e.message);
+    return;
+  }
+  btn.textContent = '⏸ 停止有声联播';
+  const tick = () => {
+    if (aud.paused || aud.ended) {
+      stopAllPlayback();
+      return;
+    }
+    seekTo(aud.currentTime, false);
+    rafId = requestAnimationFrame(tick);
+  };
+  rafId = requestAnimationFrame(tick);
+}
+
+function toggleSilentPlay() {
   const btn = document.getElementById('btn-play');
   if (playTimer) {
-    clearInterval(playTimer); playTimer = null; btn.textContent = '▶ 播放预览';
+    stopAllPlayback();
   } else {
+    stopAllPlayback();
     btn.textContent = '⏸ 暂停';
     playTimer = setInterval(() => {
-      curTime += 0.08;
+      curTime += 0.05;
       if (curTime >= currentDuration) curTime = 0;
-      seekTo(curTime);
-    }, 80);
+      seekTo(curTime, false);
+    }, 50);
+  }
+}
+
+async function runBuildVo() {
+  await saveConfig();
+  toast('🎙️ 正在生成 +0% 原速配音并提取毫秒级 WordBoundary 定轴...');
+  const r = await fetch(`/api/projects/${encodeURIComponent(currentPid)}/build-vo`, { method: 'POST' });
+  const d = await r.json();
+  if (d.ok) {
+    currentCfg = d.config;
+    currentAudioUrl = d.audio_url || '';
+    fillForm(currentCfg);
+    syncTimelineUI(currentCfg);
+    renderCompliance(d.compliance);
+    renderPrompts(d.prompts);
+    reloadFrame();
+    toast(`✓ 原速定轴完成：总时长 ${currentCfg.duration}s，可直接点击「🔊 有声实时联播」！`);
+  } else {
+    toast('配音定轴失败：' + (d.error || '未知错误'));
   }
 }
 
 function syncTimelineUI(cfg) {
-  currentDuration = parseFloat(cfg.duration || 45.0);
+  currentDuration = parseFloat(cfg.duration || 41.3);
   const scrubber = document.getElementById('scrubber');
   scrubber.max = currentDuration;
   if (curTime > currentDuration) curTime = 0;
@@ -426,63 +500,13 @@ function syncTimelineUI(cfg) {
   const statusEl = document.getElementById('srt-status');
   const chipsEl = document.getElementById('scene-chips');
   if (isDynamicCfg(cfg) && Array.isArray(cfg.scenes) && cfg.scenes.length) {
-    if (statusEl) statusEl.innerHTML = `<span style="color:var(--mint);">✓ 自由分镜模式 · 共 ${cfg.scenes.length} 幕 · 总时长 ${currentDuration.toFixed(1)}s</span>`;
+    if (statusEl) statusEl.textContent = `✓ 共 ${cfg.scenes.length} 镜 · +0% 原速总时长 ${currentDuration.toFixed(1)}s`;
     if (chipsEl) {
       chipsEl.innerHTML = cfg.scenes.map((s, idx) => {
         const mid = ((parseFloat(s.start || 0) + parseFloat(s.end || currentDuration)) * 0.5).toFixed(2);
-        return `<span class="chip" onclick="seekTo(${mid})">${idx + 1}. ${(s.title || s.id).slice(0, 8)} (${s.start}s)</span>`;
+        return `<span class="chip" onclick="seekTo(${mid}, true)">${idx + 1}. ${(s.title || s.id).slice(0, 9)} (${s.start}s)</span>`;
       }).join('');
     }
-  } else if (Array.isArray(cfg.scene_timings) && cfg.scene_timings.length) {
-    if (statusEl) statusEl.innerHTML = `<span style="color:var(--mint);">✓ 已按 SRT 字幕对齐 10 幕 · 总时长 ${currentDuration.toFixed(1)}s</span>`;
-    if (chipsEl) {
-      chipsEl.innerHTML = cfg.scene_timings.map(s => {
-        const mid = ((s.start + s.end) * 0.5).toFixed(2);
-        return `<span class="chip" onclick="seekTo(${mid})">${s.label} (${s.start}s)</span>`;
-      }).join('');
-    }
-  } else {
-    if (statusEl) statusEl.textContent = `当前使用默认 ${currentDuration.toFixed(1)}s 标准时间轴`;
-    if (chipsEl) {
-      const defaults = [
-        [1.8, 'S1 上楼痛点'], [5.5, 'S2A 扶腰痛点'], [9.2, 'S2B 夜间抽筋'],
-        [13.8, 'S3 X光透视'], [17.0, 'S4 纯白单钙瓶'], [21.0, 'S5A 鲨鱼软骨+牛奶'],
-        [25.6, 'S5B 鸡蛋黄+葛根素'], [31.2, 'S5C 注入屈伸'], [37.4, 'S6 蓝帽+小胶囊'], [42.5, 'S7 暖阳大牌落版']
-      ];
-      chipsEl.innerHTML = defaults.map(([t, lbl]) => `<span class="chip" onclick="seekTo(${t})">${lbl}</span>`).join('');
-    }
-  }
-}
-
-async function uploadSrt(input) {
-  const file = input.files[0];
-  if (!file) return;
-  toast(`正在解析 ${file.name} 并自动拆幕对齐...`);
-  const r = await fetch(`/api/projects/${encodeURIComponent(currentPid)}/sync-srt`, {
-    method: 'POST', body: file
-  });
-  const d = await r.json();
-  input.value = '';
-  if (d.ok) {
-    currentCfg = d.config;
-    fillForm(currentCfg);
-    syncTimelineUI(currentCfg);
-    renderCompliance(d.compliance);
-    reloadFrame();
-    toast(`SRT 对齐完成：${d.summary.srt_entries} 条字幕 → 10 幕（总时长 ${d.summary.duration}s）`);
-  } else {
-    toast('SRT 导入失败：' + (d.error || '未知错误'));
-  }
-}
-
-async function resetTiming() {
-  const r = await fetch(`/api/projects/${encodeURIComponent(currentPid)}/reset-timing`, { method: 'POST' });
-  const d = await r.json();
-  if (d.ok) {
-    currentCfg = d.config;
-    syncTimelineUI(currentCfg);
-    reloadFrame();
-    toast('已重置为默认 45.0s 时间轴');
   }
 }
 
@@ -491,15 +515,20 @@ async function initProjects() {
   const d = await r.json();
   const sel = document.getElementById('proj-select');
   sel.innerHTML = d.projects.map(p => `<option value="${p.id}">${p.name} (${p.id})</option>`).join('');
-  if (d.projects.length) await loadProject(currentPid || d.projects[0].id);
+  if (d.projects.length) {
+    const hasBys = d.projects.some(p => p.id === 'baiyunshan-guanjietie');
+    await loadProject(hasBys ? 'baiyunshan-guanjietie' : d.projects[0].id);
+  }
 }
 
 async function loadProject(pid) {
+  stopAllPlayback();
   currentPid = pid;
   document.getElementById('proj-select').value = pid;
   const r = await fetch(`/api/projects/${encodeURIComponent(pid)}`);
   const data = await r.json();
   currentCfg = data.config;
+  currentAudioUrl = data.audio_url || '';
   fillForm(currentCfg);
   syncTimelineUI(currentCfg);
   renderCompliance(data.compliance);
@@ -507,53 +536,67 @@ async function loadProject(pid) {
   reloadFrame();
 }
 
-const SCENE_TYPES = [
-  ['hero_hook', '痛点钩子 (hero_hook)'],
-  ['data_hud', '机理数据仪表盘 (data_hud)'],
-  ['split_contrast', '斜切方案对比 (split_contrast)'],
-  ['orbit_cards', '成分环绕类比 (orbit_cards)'],
-  ['proof_spec', '权威背书规格 (proof_spec)'],
-  ['brand_finale', '品牌大牌落版 (brand_finale)'],
-  ['custom_card', '通用卖点冲击卡 (custom_card)'],
+const VP_MODES = [
+  ['clip', '标准动态视窗 (clip)'],
+  ['coverflow3', '3D居中悬浮轮播 (coverflow3)'],
+  ['wipe_compare', '前后激光扫描对比 (wipe_compare)'],
+];
+const SUB_STYLES = [
+  ['pro_glass', '蓝金磨砂胶囊 (pro_glass)'],
+  ['pain_q', '提问亮金微弹 (pain_q)'],
+  ['pain_stomp3', '三词卡点砸屏 (pain_stomp3)'],
+  ['pain_urgent', '红字警示+激光条 (pain_urgent)'],
+];
+const TRANS_TYPES = [
+  ['dissolve', '丝滑叠化 (dissolve)'],
+  ['whip_zoom', '痛点微推快切 (whip_zoom)'],
+  ['optical_flash', '光学闪白唤醒 (optical_flash)'],
+  ['none', '硬切无转场 (none)'],
 ];
 
 function renderDynamicScenes(cfg) {
   const dyn = isDynamicCfg(cfg);
   document.getElementById('dynamic-scenes-panel').style.display = dyn ? 'block' : 'none';
-  document.getElementById('legacy-copy-panel').style.display = dyn ? 'none' : 'block';
+  document.getElementById('frame-copy-panel').style.display = (cfg.template_mode === 'ref_frame' && (cfg.layout_mode || 'three_band') === 'three_band') ? 'block' : 'none';
   if (!dyn) return;
   const list = document.getElementById('dynamic-scenes-list');
   const scenes = cfg.scenes || [];
   list.innerHTML = scenes.map((sc, i) => `
     <div style="border:1px solid var(--border); border-radius:10px; padding:10px; margin-bottom:10px; background:rgba(0,0,0,0.22);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <strong style="color:var(--gold); font-size:13px;">第 ${i + 1} 幕 (${sc.id || 's' + (i + 1)})</strong>
+        <strong style="color:var(--gold); font-size:13px;">第 ${i + 1} 镜 (${sc.id || 's' + (i + 1)}) · ${sc.start}–${sc.end}s</strong>
         <div style="display:flex; gap:6px;">
-          <button class="btn-ghost" style="padding:2px 8px; font-size:11px;" onclick="seekTo(${(((parseFloat(sc.start||0)+parseFloat(sc.end||3))/2)).toFixed(2)})">预览</button>
+          <button class="btn-ghost" style="padding:2px 8px; font-size:11px;" onclick="seekTo(${(((parseFloat(sc.start||0)+parseFloat(sc.end||3))/2)).toFixed(2)}, true)">定位预览</button>
           <button class="btn-ghost" style="padding:2px 8px; font-size:11px; color:#FF9B85;" onclick="removeDynamicScene(${i})">删除</button>
         </div>
       </div>
       <div class="grid2">
-        <div class="field"><label>积木类型</label>
-          <select data-sc-idx="${i}" data-sc-k="type" style="width:100%;">
-            ${SCENE_TYPES.map(([k, lbl]) => `<option value="${k}" ${sc.type === k ? 'selected' : ''}>${lbl}</option>`).join('')}
-          </select>
-        </div>
-        <div class="field"><label>起止秒数（如 0.0 - 4.5）</label>
+        <div class="field"><label>镜头标题</label><input type="text" data-sc-idx="${i}" data-sc-k="title" value="${(sc.title || '').replace(/"/g, '&quot;')}" /></div>
+        <div class="field"><label>起止秒数</label>
           <div style="display:flex; gap:6px;">
             <input type="text" data-sc-idx="${i}" data-sc-k="start" value="${sc.start ?? 0}" style="width:50%;" />
             <input type="text" data-sc-idx="${i}" data-sc-k="end" value="${sc.end ?? 4}" style="width:50%;" />
           </div>
         </div>
-        <div class="field"><label>幕标 / 徽章</label><input type="text" data-sc-idx="${i}" data-sc-k="badge" value="${(sc.badge || '').replace(/"/g, '&quot;')}" /></div>
-        <div class="field"><label>主标题</label><input type="text" data-sc-idx="${i}" data-sc-k="title" value="${(sc.title || '').replace(/"/g, '&quot;')}" /></div>
       </div>
-      <div class="field"><label>副标题 / 卖点说明</label><input type="text" data-sc-idx="${i}" data-sc-k="subtitle" value="${(sc.subtitle || '').replace(/"/g, '&quot;')}" /></div>
-      <div class="grid2">
-        <div class="field"><label>底部高亮标 / CTA</label><input type="text" data-sc-idx="${i}" data-sc-k="highlight" value="${(sc.highlight || '').replace(/"/g, '&quot;')}" /></div>
-        <div class="field"><label>配图路径（相对项目目录）</label><input type="text" data-sc-idx="${i}" data-sc-k="media" value="${(sc.media || '').replace(/"/g, '&quot;')}" /></div>
+      <div class="grid3">
+        <div class="field"><label>画面组件</label>
+          <select data-sc-idx="${i}" data-sc-k="vp_mode" style="width:100%; padding:6px;">
+            ${VP_MODES.map(([k, lbl]) => `<option value="${k}" ${(sc.vp_mode || 'clip') === k ? 'selected' : ''}>${lbl}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label>花字样式</label>
+          <select data-sc-idx="${i}" data-sc-k="sub_style" style="width:100%; padding:6px;">
+            ${SUB_STYLES.map(([k, lbl]) => `<option value="${k}" ${(sc.sub_style || 'pro_glass') === k ? 'selected' : ''}>${lbl}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label>入场转场</label>
+          <select data-sc-idx="${i}" data-sc-k="trans_in" style="width:100%; padding:6px;">
+            ${TRANS_TYPES.map(([k, lbl]) => `<option value="${k}" ${(sc.trans_in || 'dissolve') === k ? 'selected' : ''}>${lbl}</option>`).join('')}
+          </select>
+        </div>
       </div>
-      <div class="field"><label>本幕口播词（edge-tts）</label><input type="text" data-sc-idx="${i}" data-sc-k="vo_text" value="${(sc.vo_text || '').replace(/"/g, '&quot;')}" /></div>
+      <div class="field"><label>本镜口播词（改词后点上方「🎙️ 原速配音定轴」自动同步毫秒级字幕）</label><input type="text" data-sc-idx="${i}" data-sc-k="vo_text" value="${(sc.vo_text || '').replace(/"/g, '&quot;')}" /></div>
     </div>
   `).join('');
 }
@@ -563,20 +606,15 @@ function addDynamicScene() {
   cfg.scenes = cfg.scenes || [];
   const lastEnd = cfg.scenes.length ? parseFloat(cfg.scenes[cfg.scenes.length - 1].end || 0) : 0;
   const idx = cfg.scenes.length + 1;
+  const sid = `s${String(idx).padStart(2, '0')}`;
   cfg.scenes.push({
-    id: `s${String(idx).padStart(2, '0')}`,
-    type: 'custom_card',
-    start: Number(lastEnd.toFixed(1)),
-    end: Number((lastEnd + 4.0).toFixed(1)),
-    badge: `SCENE ${String(idx).padStart(2, '0')}`,
-    title: `第 ${idx} 幕核心卖点`,
-    subtitle: '点击修改本幕说明文案',
-    highlight: '',
-    vo_text: '',
-    media: '',
-    items: [],
+    id: sid, frame_slot: sid, vp_mode: 'clip', type: 'custom_card',
+    trans_in: 'dissolve', sub_style: 'pro_glass',
+    start: Number(lastEnd.toFixed(2)), end: Number((lastEnd + 4.0).toFixed(2)),
+    badge: '', title: `第 ${idx} 镜核心卖点`, subtitle: '', highlight: '',
+    vo_text: '请填写本镜口播文案。', media: '', items: [],
   });
-  cfg.duration = Number((lastEnd + 4.0).toFixed(1));
+  cfg.duration = Number((lastEnd + 4.0).toFixed(2));
   currentCfg = cfg;
   renderDynamicScenes(currentCfg);
   syncTimelineUI(currentCfg);
@@ -585,7 +623,7 @@ function addDynamicScene() {
 
 function removeDynamicScene(idx) {
   const cfg = collectConfig();
-  if (!cfg.scenes || cfg.scenes.length <= 1) { toast('至少保留 1 幕'); return; }
+  if (!cfg.scenes || cfg.scenes.length <= 1) { toast('至少保留 1 镜'); return; }
   cfg.scenes.splice(idx, 1);
   cfg.duration = Math.max(...cfg.scenes.map(s => parseFloat(s.end || 4)));
   currentCfg = cfg;
@@ -597,7 +635,7 @@ function removeDynamicScene(idx) {
 async function analyzeRefVideo(input) {
   const file = input.files[0];
   if (!file) return;
-  toast(`正在拉片拆解参考视频 ${file.name}（提取关键帧与切点）...`);
+  toast(`正在像素级拉片拆解 ${file.name}...`);
   const r = await fetch(`/api/projects/${encodeURIComponent(currentPid)}/analyze-ref?extract_audio=1`, {
     method: 'POST', body: file
   });
@@ -610,63 +648,77 @@ async function analyzeRefVideo(input) {
     renderCompliance(d.compliance);
     renderPrompts(d.prompts);
     reloadFrame();
+    const lc = d.analysis.layout_contract || {};
+    const lcTxt = lc.is_three_band_frame
+      ? `识别为【三段式包框】· 推荐中视窗比例 ${lc.recommended_1080x1920_contract?.viewport_ratio || '16:9'}`
+      : `识别为【全屏沉浸式】(${d.analysis.meta.ratio})`;
     document.getElementById('ref-result').innerHTML = `
-      <div style="color:var(--mint); margin-bottom:6px;">✓ 拉片完成：${d.analysis.meta.duration}s (${d.analysis.meta.ratio}) → 自动拆出 ${d.analysis.scene_count} 幕骨架，并已提取参考底乐！</div>
+      <div style="color:var(--mint); margin-bottom:6px;">✓ 拉片完成：${d.analysis.meta.duration}s → ${d.analysis.scene_count} 镜骨架 ｜ ${lcTxt}</div>
       <a href="${d.analysis.storyboard_url}" target="_blank" style="color:var(--gold);">↗ 查看参考视频关键帧拉片图</a>
       <img src="${d.analysis.storyboard_url}" style="width:100%; border-radius:8px; margin-top:6px;" />
     `;
-    toast(`参考视频拆解完成：已生成 ${d.analysis.scene_count} 幕骨架！`);
+    toast(`参考片拆解完成：${lcTxt}`);
   } else {
-    toast('参考视频拆解失败：' + (d.error || '未知错误'));
+    toast('拆解失败：' + (d.error || '未知错误'));
   }
 }
 
 function fillForm(cfg) {
-  const b = cfg.brand || {}, p = cfg.pain_points || {}, n = cfg.nutrients || {}, a = cfg.audio || {};
-  const catEl = document.getElementById('f-category');
-  if (catEl) catEl.value = cfg.category || 'blue_hat';
-  const map = {
-    product_name: b.product_name, category_tag: b.category_tag,
-    product_name_line1: b.product_name_line1, product_name_line2: b.product_name_line2,
-    approval_no: b.approval_no, spec_pack: b.spec_pack,
-    function_1: b.function_1, function_2: b.function_2,
-    finale_badge: b.finale_badge, compliance_footer: b.compliance_footer,
-    hook_line1: p.hook_line1, hook_line2: p.hook_line2, hook_sub: p.hook_sub,
-    pain1_tag: p.pain1_tag, pain2_tag: p.pain2_tag, pain3_title: p.pain3_title,
-    card1_pill: n.card1_pill, card1_analogy: n.card1_analogy,
-    card2_pill: n.card2_pill, card2_analogy: n.card2_analogy,
-    card3_pill: n.card3_pill, card3_analogy: n.card3_analogy,
-    card4_pill: n.card4_pill, card4_analogy: n.card4_analogy,
-  };
-  for (const [k, v] of Object.entries(map)) {
-    const el = document.getElementById('f-' + k);
-    if (el) el.value = v || '';
+  const b = cfg.brand || {}, fc = cfg.frame_copy || {}, a = cfg.audio || {};
+  document.getElementById('f-category').value = cfg.category || 'medical_device';
+  document.getElementById('f-layout_mode').value = cfg.layout_mode || 'three_band';
+  document.getElementById('f-viewport_ratio').value = cfg.viewport_ratio || '16:9';
+  document.getElementById('f-product_name').value = b.product_name || '';
+  document.getElementById('f-category_tag').value = b.category_tag || '';
+  document.getElementById('f-approval_no').value = b.approval_no || '';
+  document.getElementById('f-compliance_footer').value = b.compliance_footer || '';
+
+  for (const k of ['top_left', 'top_right', 'top_sub', 'device_tag', 'bot_red', 'bot_blue', 'bot_line2']) {
+    const el = document.getElementById('fc-' + k);
+    if (el) el.value = fc[k] || '';
   }
+
   document.getElementById('a-bgm').checked = !!a.enable_bgm;
   document.getElementById('a-sfx').checked = !!a.enable_sfx;
   document.getElementById('a-vo').checked = !!a.enable_vo;
   document.getElementById('a-voice').value = a.voice || 'zh-CN-YunyangNeural';
-  const voBox = document.getElementById('vo-lines-box');
-  voBox.innerHTML = (a.vo_lines || []).map((ln, i) => `
-    <div class="field">
-      <label>${ln.id}（${ln.start}s 起，≤ ${ln.max_dur}s）</label>
-      <input type="text" data-vo-idx="${i}" value="${(ln.text || '').replace(/"/g, '&quot;')}" />
+  document.getElementById('vo-lines-box').innerHTML = (a.vo_lines || []).map(ln => `
+    <div style="font-size:12px; padding:7px 10px; background:#0D1C18; border-radius:6px; margin-bottom:6px;">
+      <strong style="color:var(--gold);">${ln.id}</strong> (${ln.start}s) · ${ln.text}
     </div>
   `).join('');
+
   renderDynamicScenes(cfg);
+  const clipBox = document.getElementById('dynamic-clip-uploads');
+  if (clipBox && Array.isArray(cfg.scenes)) {
+    clipBox.style.display = 'block';
+    clipBox.innerHTML = `<h3>🎬 逐镜动态 MP4 回填（不足口播时长将自动启用局部无缝循环）</h3>` +
+      cfg.scenes.map((sc, idx) => {
+        const slot = sc.frame_slot || sc.id || ('s' + (idx + 1));
+        return `<div class="upload-row"><span><strong>${slot.toUpperCase()}</strong> (${sc.start}–${sc.end}s) · ${sc.title || ''}</span><input type="file" accept="video/mp4,video/*" onchange="uploadAsset('clip:${slot}', this)" /></div>`;
+      }).join('');
+  }
 }
 
 function collectConfig() {
   const cfg = JSON.parse(JSON.stringify(currentCfg));
-  const val = k => (document.getElementById('f-' + k) || {}).value || '';
-  cfg.category = val('category') || cfg.category || 'blue_hat';
+  const val = id => (document.getElementById(id) || {}).value || '';
+  cfg.category = val('f-category') || cfg.category || 'medical_device';
+  cfg.layout_mode = val('f-layout_mode') || 'three_band';
+  cfg.viewport_ratio = val('f-viewport_ratio') || '16:9';
   cfg.brand = cfg.brand || {};
   Object.assign(cfg.brand, {
-    product_name: val('product_name'), category_tag: val('category_tag'),
-    approval_no: val('approval_no'), compliance_footer: val('compliance_footer'),
+    product_name: val('f-product_name'),
+    category_tag: val('f-category_tag'),
+    approval_no: val('f-approval_no'),
+    compliance_footer: val('f-compliance_footer'),
   });
-  if (isDynamicCfg(cfg)) {
-    cfg.scenes = cfg.scenes || [];
+  cfg.frame_copy = cfg.frame_copy || {};
+  for (const k of ['top_left', 'top_right', 'top_sub', 'device_tag', 'bot_red', 'bot_blue', 'bot_line2']) {
+    const el = document.getElementById('fc-' + k);
+    if (el && el.value) cfg.frame_copy[k] = el.value;
+  }
+  if (isDynamicCfg(cfg) && Array.isArray(cfg.scenes)) {
     document.querySelectorAll('[data-sc-idx]').forEach(el => {
       const idx = parseInt(el.dataset.scIdx, 10);
       const k = el.dataset.scK;
@@ -676,33 +728,8 @@ function collectConfig() {
     if (cfg.scenes.length) {
       cfg.duration = Math.max(1, ...cfg.scenes.map(s => parseFloat(s.end || 4)));
     }
-    cfg.audio.vo_lines = cfg.scenes.filter(s => (s.vo_text || '').trim()).map(s => ({
-      id: s.id,
-      start: Number((parseFloat(s.start || 0) + 0.08).toFixed(2)),
-      max_dur: Number(Math.max(0.8, parseFloat(s.end || 4) - parseFloat(s.start || 0) - 0.18).toFixed(2)),
-      text: s.vo_text,
-    }));
-  } else {
-    Object.assign(cfg.brand, {
-      product_name_line1: val('product_name_line1'), product_name_line2: val('product_name_line2'),
-      spec_pack: val('spec_pack'), function_1: val('function_1'), function_2: val('function_2'),
-      finale_badge: val('finale_badge'),
-    });
-    Object.assign(cfg.pain_points, {
-      hook_line1: val('hook_line1'), hook_line2: val('hook_line2'), hook_sub: val('hook_sub'),
-      pain1_tag: val('pain1_tag'), pain2_tag: val('pain2_tag'), pain3_title: val('pain3_title'),
-    });
-    Object.assign(cfg.nutrients, {
-      card1_pill: val('card1_pill'), card1_analogy: val('card1_analogy'),
-      card2_pill: val('card2_pill'), card2_analogy: val('card2_analogy'),
-      card3_pill: val('card3_pill'), card3_analogy: val('card3_analogy'),
-      card4_pill: val('card4_pill'), card4_analogy: val('card4_analogy'),
-    });
-    document.querySelectorAll('[data-vo-idx]').forEach(inp => {
-      const idx = parseInt(inp.dataset.voIdx, 10);
-      if (cfg.audio.vo_lines[idx]) cfg.audio.vo_lines[idx].text = inp.value;
-    });
   }
+  cfg.audio = cfg.audio || {};
   cfg.audio.enable_bgm = document.getElementById('a-bgm').checked;
   cfg.audio.enable_sfx = document.getElementById('a-sfx').checked;
   cfg.audio.enable_vo = document.getElementById('a-vo').checked;
@@ -717,12 +744,12 @@ async function saveConfig() {
   });
   const data = await r.json();
   currentCfg = cfg;
+  renderDynamicScenes(cfg);
   syncTimelineUI(cfg);
   renderCompliance(data.compliance);
   renderPrompts(data.prompts);
   const frame = document.getElementById('preview-frame');
   if (frame.contentWindow) frame.contentWindow.postMessage({ type: 'applyConfig', config: cfg, t: curTime }, '*');
-  toast('配置已保存并同步到预览画布');
 }
 
 function renderCompliance(c) {
@@ -730,12 +757,12 @@ function renderCompliance(c) {
   const box = document.getElementById('comp-alerts');
   const catLabel = c.category_label || '合规';
   if (c.passed) {
-    b.className = 'badge-ok'; b.textContent = `✓ ${catLabel}合规通过`;
+    b.className = 'badge-ok'; b.textContent = `✓ ${catLabel}通过`;
     box.style.display = 'none';
   } else {
-    b.className = 'badge-err'; b.textContent = `⚠ ${catLabel}发现 ${c.error_count} 处风险`;
+    b.className = 'badge-err'; b.textContent = `⚠ ${catLabel} ${c.error_count} 处风险`;
     box.style.display = 'block';
-    box.innerHTML = `<h3 style="color:#FF8C7A;">合规校验提醒（${catLabel}）</h3>` +
+    box.innerHTML = `<h3 style="color:#FF8C7A;">合规校验拦截（${catLabel}）</h3>` +
       c.issues.map(i => `<div style="font-size:12px; color:#FFB3A7; margin-bottom:6px;">• ${i.message}</div>`).join('');
   }
 }
@@ -743,10 +770,10 @@ function renderCompliance(c) {
 function renderPrompts(list) {
   document.getElementById('prompts-list').innerHTML = list.map((p, i) => `
     <div class="sec">
-      <h3>${p.title} <span style="font-size:11px; color:var(--muted);">${p.ratio} · ${p.recommended_model}</span></h3>
-      <div style="font-size:12px; color:var(--mint);">生图中文提示词 <button class="btn-ghost" style="padding:3px 9px; font-size:11px; margin-left:6px;" onclick="copyText(${i}, 'img')">复制</button></div>
+      <h3>${p.title} <span style="font-size:11px; color:var(--muted);">${p.ratio}</span></h3>
+      <div style="font-size:12px; color:var(--mint);">首帧 / 场景提示词 <button class="btn-ghost" style="padding:3px 9px; font-size:11px; margin-left:6px;" onclick="copyText(${i}, 'img')">复制</button></div>
       <div class="prompt-box" id="p-img-${i}">${p.prompt_image}</div>
-      ${p.prompt_video ? `<div style="font-size:12px; color:var(--gold); margin-top:10px;">图生视频提示词 <button class="btn-ghost" style="padding:3px 9px; font-size:11px; margin-left:6px;" onclick="copyText(${i}, 'vid')">复制</button></div><div class="prompt-box" id="p-vid-${i}">${p.prompt_video}</div>` : ''}
+      ${p.prompt_video ? `<div style="font-size:12px; color:var(--gold); margin-top:10px;">分段导演级图生视频提示词 <button class="btn-ghost" style="padding:3px 9px; font-size:11px; margin-left:6px;" onclick="copyText(${i}, 'vid')">复制</button></div><div class="prompt-box" id="p-vid-${i}">${p.prompt_video}</div>` : ''}
     </div>
   `).join('');
 }
@@ -754,40 +781,40 @@ function renderPrompts(list) {
 function copyText(i, kind) {
   const txt = document.getElementById(`p-${kind}-${i}`).textContent;
   navigator.clipboard.writeText(txt);
-  toast('提示词已复制到剪贴板');
+  toast('导演级提示词已复制');
 }
 
 async function uploadAsset(target, input) {
   const file = input.files[0];
   if (!file) return;
-  toast(`正在上传并处理 ${file.name}...`);
+  toast(`正在上传并智能切帧 ${file.name}...`);
   const r = await fetch(`/api/projects/${encodeURIComponent(currentPid)}/upload?target=${encodeURIComponent(target)}`, {
     method: 'POST', body: file
   });
   const d = await r.json();
   if (d.ok) {
-    toast(d.frames ? `视频已自动拆帧（${d.frames} 帧）` : '素材已替换，正在刷新预览');
-    reloadFrame();
+    toast(d.frames ? `已智能拆帧（${d.frames} 帧）并更新分段缓存签名` : '素材已更新');
+    await loadProject(currentPid);
   } else {
     toast('上传失败：' + (d.error || '未知错误'));
   }
 }
 
 async function createProject() {
-  const name = prompt('请输入新产品名称（如：XX 益生菌 / XX 精华液 / XX 咖啡）');
+  const name = prompt('请输入新产品名称（如：白云山颈肩贴 / XX修护精华）');
   if (!name) return;
-  const id = prompt('请输入英文项目目录 ID（如：my-product）', 'product-' + Date.now().toString().slice(-4));
+  const id = prompt('请输入英文项目目录 ID', 'prod-' + Date.now().toString().slice(-4));
   if (!id) return;
-  const category = prompt('请输入品类合规模式（general=通用电商 / blue_hat=蓝帽保健品 / food=普通食品 / skincare=护肤美妆）', 'general') || 'general';
+  const category = prompt('品类合规模式（medical_device / blue_hat / functional_food / skincare / general）', 'medical_device') || 'medical_device';
   const r = await fetch('/api/projects', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, name, category, mode: 'dynamic' })
+    body: JSON.stringify({ id, name, category, mode: 'ref_frame' })
   });
   const d = await r.json();
   if (d.ok) {
     currentPid = d.id;
     await initProjects();
-    toast('已创建通用自由分镜项目（支持上传参考视频自动拆幕）');
+    toast('已创建 2.0 高定项目');
   } else {
     toast(d.error || '创建失败');
   }
@@ -797,24 +824,24 @@ async function runPreviewGrid() {
   await saveConfig();
   const bar = document.getElementById('output-bar');
   bar.style.display = 'flex';
-  document.getElementById('job-msg').textContent = '正在生成 11 帧分镜预览图（约 8 秒）...';
+  document.getElementById('job-msg').textContent = '正在生成全镜实装高清预览长图...';
   document.getElementById('job-pct').textContent = '50%';
   document.getElementById('job-prog').style.width = '50%';
   document.getElementById('result-media').innerHTML = '';
   const r = await fetch(`/api/projects/${encodeURIComponent(currentPid)}/preview?ratio=${currentRatio}`, { method: 'POST' });
   const d = await r.json();
-  document.getElementById('job-msg').textContent = '11 帧预览图已生成';
+  document.getElementById('job-msg').textContent = '全镜预览长图已生成';
   document.getElementById('job-pct').textContent = '100%';
   document.getElementById('job-prog').style.width = '100%';
-  document.getElementById('result-media').innerHTML = `<a href="${d.preview_url}" target="_blank" style="color:var(--gold); font-size:13px;">↗ 新窗口查看大图</a><img src="${d.preview_url}" style="width:100%; border-radius:8px; margin-top:8px;" />`;
+  document.getElementById('result-media').innerHTML = `<a href="${d.preview_url}" target="_blank" style="color:var(--gold); font-size:13px;">↗ 新窗口查看高清原图</a><img src="${d.preview_url}" style="width:100%; border-radius:8px; margin-top:8px;" />`;
 }
 
-async function startRender() {
+async function startRender(full = false) {
   await saveConfig();
   const bar = document.getElementById('output-bar');
   bar.style.display = 'flex';
   document.getElementById('result-media').innerHTML = '';
-  const r = await fetch(`/api/projects/${encodeURIComponent(currentPid)}/render?ratio=${currentRatio}`, { method: 'POST' });
+  const r = await fetch(`/api/projects/${encodeURIComponent(currentPid)}/render?ratio=${currentRatio}&full=${full ? 1 : 0}`, { method: 'POST' });
   const d = await r.json();
   pollJob(d.job_id);
 }
@@ -828,16 +855,16 @@ async function pollJob(jid) {
   if (j.status === 'done') {
     document.getElementById('result-media').innerHTML = `
       <div style="display:flex; gap:12px; align-items:center; margin-bottom:8px;">
-        <a href="${j.output_url}" download class="btn-primary" style="text-decoration:none; padding:7px 14px; border-radius:8px;">⬇ 下载成品 MP4</a>
+        <a href="${j.output_url}" download class="btn-primary" style="text-decoration:none; padding:7px 14px; border-radius:8px;">⬇ 下载高清成片 MP4</a>
         <span style="font-size:12px; color:var(--mint);">${j.output_url}</span>
       </div>
       <video src="${j.output_url}" controls style="width:100%; max-height:360px; border-radius:8px; background:#000;"></video>
     `;
-    toast('成品 MP4 渲染完成！');
+    toast(j.message || '成片渲染完成！');
   } else if (j.status === 'error') {
     toast('渲染出错：' + j.error);
   } else {
-    setTimeout(() => pollJob(jid), 1000);
+    setTimeout(() => pollJob(jid), 800);
   }
 }
 
