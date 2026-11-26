@@ -290,7 +290,7 @@
 
     <div id="podium"></div>
     <div id="bot-box-wrap">
-      <img id="bot-box" src="assets/official/box_right_tilt_cut.png" onerror="this.src='assets/official/product_combo_cut.png'" />
+      <img id="bot-box" src="assets/official/box_right_tilt_cut.png" onerror="this.onerror=null; this.style.display='none';" />
       <div id="bot-box-sheen"><div id="bot-box-sheen-bar"></div></div>
     </div>
   </div>
@@ -734,23 +734,31 @@ function renderSubtitles(sc, localT, pScene) {
   const style = sc.sub_style || 'pro_glass';
 
   if (style === 'pain_q') {
-    const enter = easeOutCubic(clamp((localT - 0.06) / 0.28));
-    const kwCue = parseFloat(sc.kw_cue ?? 1.01);
+    const enter = easeOutCubic(clamp((localT - 0.05) / 0.26));
+    const kwCue = parseFloat(sc.kw_cue ?? 0.45);
     const pop = localT >= kwCue ? (1 + 0.18 * Math.sin(clamp((localT - kwCue) / 0.42) * Math.PI)) : 1.0;
+    const rawTxt = String(sc.vo_text || '').trim().replace(/[，。、；,]+$/, '');
+    const hl = sc.hl_word || (rawTxt.includes('膝盖问题') ? '膝盖问题' : rawTxt.slice(Math.floor(rawTxt.length / 2)).replace(/[？?！!，。]/g, ''));
+    let innerHtml = esc(rawTxt);
+    if (hl && rawTxt.includes(hl)) {
+      const parts = rawTxt.split(hl);
+      innerHtml = `${esc(parts[0])}<span class="kw-gold" style="transform:scale(${pop.toFixed(3)});">${esc(hl)}</span>${esc(parts.slice(1).join(hl))}`;
+    }
     stage.innerHTML = `
       <div class="sub-pain-q" style="opacity:${enter.toFixed(3)}; transform:translateY(${lerp(20, 0, enter).toFixed(1)}px);">
-        您是否还在被<span class="kw-gold" style="transform:scale(${pop.toFixed(3)});">膝盖问题</span>困扰？
+        ${innerHtml}
       </div>`;
     return 0;
   }
 
   if (style === 'pain_stomp3') {
     const clauses = splitSubtitles(sc.vo_text);
-    const tags = clauses.length >= 3 ? clauses.slice(0, 3) : ['膝盖疼痛', '僵硬麻木', '活动受限'];
-    const cues = Array.isArray(sc.stomp_cues) && sc.stomp_cues.length >= 3 ? sc.stomp_cues : [0.16, 1.11, 2.10];
+    const tags = clauses.length ? clauses.slice(0, 3) : ['膝盖疼痛'];
+    const cues = Array.isArray(sc.stomp_cues) && sc.stomp_cues.length ? sc.stomp_cues : tags.map((_, i) => 0.14 + i * 0.88);
     let shakeAmp = 0;
     const pills = tags.map((tg, i) => {
-      const dt = localT - parseFloat(cues[i]);
+      const cueT = parseFloat(cues[i] ?? (0.14 + i * 0.88));
+      const dt = localT - cueT;
       if (dt < 0) return '';
       const p = clamp(dt / 0.22);
       const scVal = lerp(1.62, 1.0, easeOutBack(p));
@@ -765,17 +773,25 @@ function renderSubtitles(sc, localT, pScene) {
   }
 
   if (style === 'pain_urgent') {
-    const kwCue = parseFloat(sc.kw_cue ?? 1.19);
-    const pL = easeOutCubic(clamp((localT - 0.08) / 0.28));
+    const rawTxt = String(sc.vo_text || '').trim();
+    const hl = sc.hl_word || (rawTxt.includes('要趁早') ? '要趁早！' : rawTxt.slice(Math.max(0, rawTxt.length - 4)));
+    let leftPart = rawTxt, rightPart = '';
+    if (hl && rawTxt.includes(hl)) {
+      const idxH = rawTxt.indexOf(hl);
+      leftPart = rawTxt.slice(0, idxH);
+      rightPart = rawTxt.slice(idxH);
+    }
+    const kwCue = parseFloat(sc.kw_cue ?? 0.42);
+    const pL = easeOutCubic(clamp((localT - 0.06) / 0.26));
     const pR = easeOutBack(clamp((localT - kwCue) / 0.26));
-    const pBar = easeOutCubic(clamp((localT - (kwCue + 0.10)) / 0.45));
+    const pBar = easeOutCubic(clamp((localT - (kwCue + 0.08)) / 0.42));
     stage.innerHTML = `
       <div class="sub-urgent-wrap">
         <div class="sub-urgent-line">
-          <span style="display:inline-block; opacity:${pL.toFixed(3)}; transform:translateX(${lerp(-24, 0, pL).toFixed(1)}px);">关节日常养护</span>
-          <span class="kw-red" style="opacity:${clamp((localT - kwCue) / 0.10).toFixed(3)}; transform:scale(${lerp(1.48, 1.0, pR).toFixed(3)});">要趁早！</span>
+          ${leftPart ? `<span style="display:inline-block; opacity:${pL.toFixed(3)}; transform:translateX(${lerp(-22, 0, pL).toFixed(1)}px);">${esc(leftPart)}</span>` : ''}
+          ${rightPart ? `<span class="kw-red" style="opacity:${clamp((localT - kwCue) / 0.10).toFixed(3)}; transform:scale(${lerp(1.48, 1.0, pR).toFixed(3)});">${esc(rightPart)}</span>` : ''}
         </div>
-        <div class="sub-urgent-bar" style="width:${(pBar * 440).toFixed(0)}px; opacity:${clamp((localT - (kwCue + 0.08)) / 0.15).toFixed(2)};"></div>
+        <div class="sub-urgent-bar" style="width:${(pBar * 380).toFixed(0)}px; opacity:${clamp((localT - (kwCue + 0.06)) / 0.15).toFixed(2)};"></div>
       </div>`;
     return 0;
   }
@@ -856,7 +872,9 @@ window.applyConfig = function(cfg) {
     botBand.style.display = 'none';
     vpW = 1080; vpH = 1920;
     vpEl.style.top = '0px'; vpEl.style.width = '1080px'; vpEl.style.height = '1920px';
-    subStage.style.bottom = '110px';
+    subStage.style.bottom = '146px';
+    subStage.style.transform = 'scale(1.16)';
+    subStage.style.transformOrigin = 'center bottom';
   } else {
     stageEl.classList.remove('landscape');
     document.body.style.width = '1080px';
@@ -871,6 +889,7 @@ window.applyConfig = function(cfg) {
     vpEl.style.top = `${topH}px`; vpEl.style.width = '1080px'; vpEl.style.height = `${vpH}px`;
     botBand.style.top = `${botTop}px`; botBand.style.height = `${1920 - botTop}px`;
     subStage.style.bottom = '16px';
+    subStage.style.transform = 'none';
   }
 
   const fc = (cfg && cfg.frame_copy) || {};
