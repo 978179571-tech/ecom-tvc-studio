@@ -448,7 +448,7 @@ class StudioHandler(BaseHTTPRequestHandler):
             with open(ref_mp4, "wb") as f:
                 f.write(raw)
             extract_bgm = (qs.get("extract_audio") or ["1"])[0] == "1"
-            bgm_dst = os.path.join(pdir, "audio", "bgm_ref.wav") if extract_bgm else None
+            bgm_dst = os.path.join(ref_dir, "ref_audio.wav") if extract_bgm else None
             try:
                 analysis = analyze_reference_video(ref_mp4, ref_dir, extract_audio_path=bgm_dst)
                 cfg = load_project_config(pid)

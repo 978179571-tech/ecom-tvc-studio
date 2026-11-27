@@ -135,7 +135,7 @@ def main():
             pid = safe_id(args.project)
             pdir = project_path(pid)
             out_dir = os.path.join(pdir, "out", "_ref")
-            bgm_dst = os.path.join(pdir, "audio", "bgm_ref.wav") if args.extract_audio else None
+            bgm_dst = os.path.join(out_dir, "ref_audio.wav") if args.extract_audio else None
             res = analyze_reference_video(args.video, out_dir, extract_audio_path=bgm_dst)
             cfg = load_project_config(pid)
             lc = res.get("layout_contract") or {}
