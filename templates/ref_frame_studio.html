@@ -436,6 +436,34 @@ function buildAnchorFXSvg(prefix, fx) {
 function buildSceneHTML(sc, prefix) {
   const mode = sc.vp_mode || 'clip';
 
+  // Official Medical Device Registration Certificate Wall (for proof_spec s5)
+  if (mode === 'cert_wall') {
+    const certMedia = sc.media || 'assets/official/medical_cert.jpg';
+    return `
+      <div style="position:absolute; inset:0; background:linear-gradient(180deg, #ECF3FE 0%, #D9E6FA 62%, #C7D9F6 100%); overflow:hidden;">
+        <svg viewBox="0 0 1080 1920" width="1080" height="1920" style="position:absolute; inset:0; pointer-events:none; opacity:0.35;">
+          <circle cx="920" cy="240" r="320" fill="rgba(30,90,210,0.12)" />
+          <circle cx="140" cy="1580" r="280" fill="rgba(30,90,210,0.10)" />
+        </svg>
+        <div style="position:absolute; left:48px; top:58px; right:48px; display:flex; align-items:center; justify-content:space-between; z-index:10;">
+          <img src="assets/official/baiyunshan_logo.png" style="height:74px; width:auto; filter:drop-shadow(0 4px 10px rgba(0,24,72,0.28));" onerror="this.onerror=null;this.style.display='none';" />
+          <div style="padding:10px 26px; border-radius:999px; background:rgba(10,48,132,0.12); border:2px solid rgba(10,48,132,0.28); color:#0A3084; font-size:26px; font-weight:800;">二类医疗器械 · 持证上岗</div>
+        </div>
+        <div style="position:absolute; left:44px; right:44px; top:175px; text-align:center; z-index:10;">
+          <div style="font-size:74px; font-weight:900; color:#D91B1B; letter-spacing:0.02em; text-shadow:0 3px 0 rgba(255,255,255,0.9);">二类器械 持证上岗</div>
+          <div style="margin-top:14px; font-size:46px; font-weight:800; color:#102347; letter-spacing:0.03em;">专为膝盖问题人群研发</div>
+        </div>
+        <div id="${prefix}-cert-card" style="position:absolute; left:68px; right:68px; top:365px; height:1185px; border-radius:22px; overflow:hidden; background:#FFFFFF; border:3px solid rgba(18,68,168,0.28); box-shadow:0 24px 60px rgba(8,32,88,0.24); z-index:12;">
+          <img id="${prefix}-cert-img" src="${esc(certMedia)}" style="width:100%; height:100%; object-fit:contain; background:#FFFFFF;" />
+          <!-- Animated Red Highlight Box around 适用范围 -->
+          <div id="${prefix}-cert-hl" style="position:absolute; left:11.5%; right:11.5%; top:55.5%; height:11.8%; border:5px solid #E61E1E; border-radius:12px; background:rgba(255,56,42,0.08); box-shadow:0 0 24px rgba(230,30,30,0.45); opacity:0;"></div>
+        </div>
+        <div id="${prefix}-cert-pill" style="position:absolute; left:68px; right:68px; top:1585px; z-index:14; padding:16px 26px; border-radius:16px; background:linear-gradient(90deg, #092B7A 0%, #164EC2 50%, #092B7A 100%); border:2px solid rgba(255,224,130,0.75); text-align:center; color:#FFFFFF; font-size:30px; font-weight:800; box-shadow:0 10px 26px rgba(8,28,74,0.35);">
+          <span style="color:#FFE082;">适用范围：</span>促进局部血液循环 · 辅助消炎、消肿和止痛
+        </div>
+      </div>`;
+  }
+
   // VFX Component 3: Before/After Glowing Laser Scan Wipe
   if (mode === 'wipe_compare' || sc.wipe_compare) {
     const wc = sc.wipe_compare || {};
@@ -546,6 +574,22 @@ async function updateSceneLayer(container, prefix, sc, localT) {
   }
 
   const frameIdx = Math.floor(Math.max(0, localT) * 24) + 1;
+  if ((sc.vp_mode || '') === 'cert_wall') {
+    const cCard = document.getElementById(`${prefix}-cert-card`);
+    const cHl = document.getElementById(`${prefix}-cert-hl`);
+    if (cCard) {
+      const enterC = easeOutCubic(clamp(localT / 0.35));
+      cCard.style.opacity = enterC.toFixed(3);
+      cCard.style.transform = `translateY(${lerp(28, 0, enterC).toFixed(1)}px) scale(${lerp(0.97, 1.02, pScene).toFixed(4)})`;
+    }
+    if (cHl) {
+      const hlFade = clamp((localT - 1.4) / 0.35);
+      const pulseC = 0.72 + 0.28 * Math.sin(localT * 5.0);
+      cHl.style.opacity = (hlFade * pulseC).toFixed(2);
+    }
+    return;
+  }
+
   const imgEl = document.getElementById(`${prefix}-img`);
   if (imgEl) {
     const slot = sc.frame_slot || sc.id;
